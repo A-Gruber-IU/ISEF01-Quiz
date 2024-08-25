@@ -8,7 +8,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 
 export default function App() {
-  const hello = "Hello World von der IU Projektgruppe Software Engineering!";
+  const hello = "Hello World von der IU Projektgruppe Software Engineering! Versionsverwaltung mit CI/CD läuft.";
 
   return (
     <Container fluid>
