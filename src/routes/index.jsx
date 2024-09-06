@@ -46,7 +46,7 @@ export default function Index() {
             <Grid container spacing={2}>
 
                 <Grid size={{ xs: 4, md: 3 }}>
-                    <Paper sx={{ py: 2, px: 2, textAlign: "center" }}>
+                    <Paper elevation={8} sx={{ py: 2, px: 2, textAlign: "center" }}>
                         <Box>
                             <Stack sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <NavLink className="navlink" to={"single"}>
@@ -63,7 +63,7 @@ export default function Index() {
                     </Paper>
                 </Grid>
                 <Grid size={{ xs: 4, md: 3 }}>
-                <Paper sx={{ py: 2, px: 2, textAlign: "center" }}>
+                <Paper elevation={8} sx={{ py: 2, px: 2, textAlign: "center" }}>
                         <Box>
                             <Stack sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <NavLink className="navlink" to={"coop"}>
@@ -80,7 +80,7 @@ export default function Index() {
                     </Paper>
                 </Grid>
                 <Grid size={{ xs: 4, md: 3 }}>
-                <Paper sx={{ py: 2, px: 2, textAlign: "center" }}>
+                <Paper elevation={8} sx={{ py: 2, px: 2, textAlign: "center" }}>
                         <Box>
                             <Stack sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <NavLink className="navlink" to={"competition"}>
@@ -97,7 +97,7 @@ export default function Index() {
                     </Paper>
                 </Grid>
                 <Grid size={{ xs: 4, md: 3 }}>
-                <Paper sx={{ py: 2, px: 2, textAlign: "center" }}>
+                <Paper elevation={8} sx={{ py: 2, px: 2, textAlign: "center" }}>
                         <Box>
                             <Stack sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <NavLink className="navlink" to={"dashboard"}>
