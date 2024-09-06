@@ -1,0 +1,17 @@
+#drawer a {
+    color: inherit; /* Vererbt die Textfarbe des Eltern-Elements */
+    text-decoration: none; /* Entfernt die Unterstreichung */
+    font-weight: normal; /* Normaler Text */
+}
+
+/* Angepasster Stil für aktiven Link in der Navigation */
+#drawer a.active {
+    color: red;
+    font-weight: bold;
+}
+
+.navlink {
+    color: inherit; /* Vererbt die Textfarbe des Eltern-Elements */
+    text-decoration: none; /* Entfernt die Unterstreichung */
+    font-weight: normal; /* Normaler Text */
+}
