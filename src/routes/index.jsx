@@ -66,11 +66,11 @@ export default function Index() {
                 <Paper sx={{ py: 2, px: 2, textAlign: "center" }}>
                         <Box>
                             <Stack sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <NavLink className="navlink" to={"single"}>
+                                <NavLink className="navlink" to={"coop"}>
                                     <Diversity3Icon fontSize='large' />
 
                                 </NavLink>
-                                <NavLink className="navlink" to={"single"}>
+                                <NavLink className="navlink" to={"coop"}>
                                     <p>
                                         Coop-Modus
                                     </p>
@@ -83,11 +83,11 @@ export default function Index() {
                 <Paper sx={{ py: 2, px: 2, textAlign: "center" }}>
                         <Box>
                             <Stack sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <NavLink className="navlink" to={"single"}>
+                                <NavLink className="navlink" to={"competition"}>
                                     <EmojiEventsIcon fontSize='large' />
 
                                 </NavLink>
-                                <NavLink className="navlink" to={"single"}>
+                                <NavLink className="navlink" to={"competition"}>
                                     <p>
                                         Competititon-Modus
                                     </p>
@@ -100,11 +100,11 @@ export default function Index() {
                 <Paper sx={{ py: 2, px: 2, textAlign: "center" }}>
                         <Box>
                             <Stack sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <NavLink className="navlink" to={"single"}>
+                                <NavLink className="navlink" to={"dashboard"}>
                                     <QueryStatsIcon fontSize='large' />
 
                                 </NavLink>
-                                <NavLink className="navlink" to={"single"}>
+                                <NavLink className="navlink" to={"dashboard"}>
                                     <p>
                                         Dashboard
                                     </p>
