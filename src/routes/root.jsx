@@ -16,7 +16,7 @@ export default function Root() {
                     navigation.state === "loading" ? "loading" : ""
                 }
             >
-                <Container sx={{ pb: 7 }}>
+                <Container sx={{ py: 7 }}>
                     <Outlet />
                 </Container>
             </div>

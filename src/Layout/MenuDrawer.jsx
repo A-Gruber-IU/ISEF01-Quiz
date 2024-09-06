@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 
-import "./layout.css";
+import "./styles.css";
 
 import IconButton from '@mui/material/IconButton';
 import Box from '@mui/material/Box';
@@ -139,7 +139,7 @@ export default function MenuDrawer() {
       >
         <MenuOpenIcon />
       </IconButton>
-      <Drawer open={open} onClose={toggleDrawer(false)}>
+      <Drawer open={open} anchor='right' onClose={toggleDrawer(false)}>
         {DrawerList}
       </Drawer>
     </div>

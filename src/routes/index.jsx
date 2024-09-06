@@ -1,26 +1,52 @@
 import { NavLink } from 'react-router-dom';
 
-import "../Layout/layout.css";
+import '@fontsource/source-sans-pro/700.css';
+import "../Layout/styles.css";
 
 import Paper from '@mui/material/Paper';
 import Grid from '@mui/material/Grid2';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
 
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import QueryStatsIcon from '@mui/icons-material/QueryStats';
-import HomeIcon from '@mui/icons-material/Home';
 import Diversity3Icon from '@mui/icons-material/Diversity3';
 
 export default function Index() {
 
     return (
         <Box sx={{ flexGrow: 1 }}>
-            <p>Willkommen auf der Startseite!</p><Grid container spacing={2}>
+            <Typography
+                variant="h4"
+                noWrap
+                component="a"
+                className='iuHeadline1'
+                sx={{
+                    fontWeight: 700,
+                    marginTop: 2,
+                }}
+            >
+                LERNEN.
+            </Typography>
+            <br />
+            <Typography
+                variant="h4"
+                noWrap
+                component="a"
+                className='iuHeadline1'
+                sx={{
+                    fontWeight: 700,
+                    marginBottom: 2,
+                }}
+            >
+                AUF MEINE ART.
+            </Typography>
+            <Grid container spacing={2}>
+
                 <Grid size={{ xs: 4, md: 3 }}>
-                    <Paper>
+                    <Paper sx={{ py: 2, px: 2, textAlign: "center" }}>
                         <Box>
                             <Stack sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <NavLink className="navlink" to={"single"}>
@@ -37,7 +63,7 @@ export default function Index() {
                     </Paper>
                 </Grid>
                 <Grid size={{ xs: 4, md: 3 }}>
-                    <Paper>
+                <Paper sx={{ py: 2, px: 2, textAlign: "center" }}>
                         <Box>
                             <Stack sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <NavLink className="navlink" to={"single"}>
@@ -54,7 +80,7 @@ export default function Index() {
                     </Paper>
                 </Grid>
                 <Grid size={{ xs: 4, md: 3 }}>
-                    <Paper>
+                <Paper sx={{ py: 2, px: 2, textAlign: "center" }}>
                         <Box>
                             <Stack sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <NavLink className="navlink" to={"single"}>
@@ -71,7 +97,7 @@ export default function Index() {
                     </Paper>
                 </Grid>
                 <Grid size={{ xs: 4, md: 3 }}>
-                    <Paper>
+                <Paper sx={{ py: 2, px: 2, textAlign: "center" }}>
                         <Box>
                             <Stack sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <NavLink className="navlink" to={"single"}>

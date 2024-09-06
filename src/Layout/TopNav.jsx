@@ -2,36 +2,36 @@ import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
-import "@fontsource/kalam";
+import { NavLink } from 'react-router-dom';
+import '@fontsource/source-sans-pro/700.css';
+import "./styles.css";
 
 import MenuDrawer from './MenuDrawer';
 
 export default function TopNav() {
     return (
         <Box sx={{ flexGrow: 1 }}>
-            <AppBar position="static">
+            <AppBar position="fixed" color='white'>
                 <Toolbar sx={{ justifyContent: 'space-between' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <MenuDrawer />
-                        <Typography
-                            variant="h4"
-                            noWrap
-                            component="a"
-                            sx={{
-                                mx: 1,
-                                display: { xs: 'none', md: 'flex' },
-                                fontFamily: 'kalam',
-                                fontWeight: 700,
-                                letterSpacing: '.2rem',
-                                color: 'inherit',
-                                textDecoration: 'none',
-                            }}
-                        >
-                            QuizApp
-                        </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'left' }}>
+                        <img src="../images/iu-logo.svg" alt="IU logo" style={{ height: '35%', width: '35%' }} />
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'right' }}>
-                        <img src="../images/iu-logo.svg" alt="IU logo" style={{ height: '40%', width: '40%' }} />
+                        <NavLink className="navlink" to={"/"}>
+                            <Typography
+                                variant="h4"
+                                noWrap
+                                component="a"
+                                className='iuHeadline2'
+                                sx={{
+                                    fontWeight: 700,
+                                    marginRight: 5,
+                                }}
+                            >
+                                QUIZ APP
+                            </Typography>
+                        </NavLink>
+                        <MenuDrawer />
                     </Box>
                 </Toolbar>
             </AppBar>
