@@ -7,7 +7,7 @@ import PolicyIcon from '@mui/icons-material/Policy';
 export default function BottomNav() {
 
   return (
-    <Box sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, pb: 1 }}>
+    <Box sx={{ position: 'relative', bottom: 0, left: 0, right: 0 }}>
       <BottomNavigation
         showLabels
       >

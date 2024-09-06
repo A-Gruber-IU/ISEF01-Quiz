@@ -137,7 +137,7 @@ export default function MenuDrawer() {
         aria-label="menu"
         sx={{ mr: 2 }}
       >
-        <MenuOpenIcon />
+        <MenuOpenIcon color='plainBlack' />
       </IconButton>
       <Drawer open={open} anchor='right' onClose={toggleDrawer(false)}>
         {DrawerList}

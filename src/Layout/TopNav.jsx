@@ -11,8 +11,8 @@ import MenuDrawer from './MenuDrawer';
 export default function TopNav() {
     return (
         <Box sx={{ flexGrow: 1 }}>
-            <AppBar position="fixed" color='white'>
-                <Toolbar sx={{ justifyContent: 'space-between' }}>
+            <AppBar position="fixed" color="primary" >
+                <Toolbar sx={{ justifyContent: 'space-between', color: "#F6E7F1" }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'left' }}>
                         <img src="../images/iu-logo.svg" alt="IU logo" style={{ height: '35%', width: '35%' }} />
                     </Box>
