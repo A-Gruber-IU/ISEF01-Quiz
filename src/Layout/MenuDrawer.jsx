@@ -119,7 +119,7 @@ export default function MenuDrawer() {
               <ListItemIcon>
                 <AccountCircleIcon />
               </ListItemIcon>
-              <ListItemText primary={"Profile"} />
+              <ListItemText primary={"Profil"} />
             </ListItemButton>
           </NavLink>
         </ListItem>
@@ -135,7 +135,7 @@ export default function MenuDrawer() {
         edge="start"
         color="inherit"
         aria-label="menu"
-        sx={{ mr: 2 }}
+        sx={{ mr: 1 }}
       >
         <MenuOpenIcon color='plainBlack' />
       </IconButton>

@@ -3,6 +3,7 @@ import BottomNavigation from '@mui/material/BottomNavigation';
 import BottomNavigationAction from '@mui/material/BottomNavigationAction';
 import SchoolIcon from '@mui/icons-material/School';
 import PolicyIcon from '@mui/icons-material/Policy';
+import InfoIcon from '@mui/icons-material/Info';
 
 export default function BottomNav() {
 
@@ -11,7 +12,8 @@ export default function BottomNav() {
       <BottomNavigation
         showLabels
       >
-        <BottomNavigationAction label="Impressum" icon={<PolicyIcon />} href='/impressum' />
+        <BottomNavigationAction label="Impressum" icon={<InfoIcon />} href='/impressum' />
+        <BottomNavigationAction label="Datenschutz" icon={<PolicyIcon />} href='/datenschutz' />
         <BottomNavigationAction label="IU.de" icon={<SchoolIcon />} href='https://www.iu.de' />
       </BottomNavigation>
     </Box>

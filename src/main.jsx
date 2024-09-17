@@ -17,6 +17,7 @@ import Profile from './Profile.jsx';
 import Dashboard from './Dashboard.jsx';
 import Index from './routes/index.jsx';
 import Impressum from './Impressum.jsx';
+import Datenschutz from './Datenschutz.jsx';
 
 
 const router = createBrowserRouter([
@@ -49,6 +50,10 @@ const router = createBrowserRouter([
       {
         path: "impressum",
         element: <Impressum />,
+      },
+      {
+        path: "datenschutz",
+        element: <Datenschutz />,
       },
     ],
   },

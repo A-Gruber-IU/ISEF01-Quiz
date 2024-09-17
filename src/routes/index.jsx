@@ -21,7 +21,6 @@ export default function Index() {
             <Typography
                 variant="h4"
                 noWrap
-                component="a"
                 className='iuHeadline1'
                 sx={{
                     fontWeight: 700,
@@ -34,7 +33,6 @@ export default function Index() {
             <Typography
                 variant="h4"
                 noWrap
-                component="a"
                 className='iuHeadline1'
                 sx={{
                     fontWeight: 700,
