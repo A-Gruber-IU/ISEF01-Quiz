@@ -23,7 +23,7 @@ const ResponsiveLogo = styled('img')(({ theme }) => ({
   },
 }));
 
-export default function TopNav() {
+export default function TopNav({onLogout}) {
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="fixed" color="primary">
@@ -44,7 +44,7 @@ export default function TopNav() {
                 QUIZ APP
               </Typography>
             </NavLink>
-            <MenuDrawer />
+            <MenuDrawer onLogout={onLogout} />
           </Box>
         </Toolbar>
       </AppBar>

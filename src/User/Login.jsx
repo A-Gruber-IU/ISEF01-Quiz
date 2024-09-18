@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, AuthErrorCodes } from "firebase/auth";
 import '@fontsource/source-sans-pro/700.css';
-import "./Layout/styles.css";
+import "../Layout/styles.css";
 import Typography from '@mui/material/Typography';
 import { TextField, Button, Container, Stack, Alert, Tooltip } from "@mui/material";
 import LoginIcon from '@mui/icons-material/Login';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 
-export default function Login({auth, setLoggedIn}) {
+export default function Login({auth, setActiveUser}) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [validationFeedback, setValidationFeedback] = useState("");
@@ -17,15 +17,16 @@ export default function Login({auth, setLoggedIn}) {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
                 console.log("User is signed in:", user);
-                setLoggedIn(true);
+                setActiveUser(user);
             } else {
-                console.log("User is signed out");
-                setLoggedIn(false);
+                console.log("User is signed out.");
             }
         });
 
         return () => unsubscribe();
-    }, [auth, setLoggedIn]);
+    }, [auth, setActiveUser]);
+
+
 
     const isValidEmail = useCallback((email) => {
         const domain = email.split('@')[1];
@@ -56,14 +57,12 @@ export default function Login({auth, setLoggedIn}) {
             setValidationFeedback("Login erfolgreich!");
         } catch (error) {
             console.error("Error logging in:", error);
-            let errormsg = String(error);
-            if (errormsg.includes("auth/user-not-found") || errormsg.includes("auth/wrong-password")) {
-                setValidationFeedback("Falsche Emailadresse oder Passwort.");
-            } else {
-                setValidationFeedback("Fehler beim Login:", errormsg);
+            if (error.code == AuthErrorCodes.INVALID_PASSWORD || error.code == AuthErrorCodes.USER_DELETED ) {
+                setValidationFeedback("Falsche Emailadresse oder falsches Passwort.");
             }
         } finally {
             setIsLoading(false);
+            console.log(auth);
         }
     }, [auth, email, password]);
 
@@ -86,6 +85,7 @@ export default function Login({auth, setLoggedIn}) {
                 <Typography
                     variant="h4"
                     noWrap
+                    className='iuHeadline2'
                     sx={{
                         fontWeight: 700,
                         marginRight: 5,

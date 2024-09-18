@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 
+import { signOut } from 'firebase/auth';
+
 import "./styles.css";
 
 import IconButton from '@mui/material/IconButton';
@@ -19,18 +21,24 @@ import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 import QueryStatsIcon from '@mui/icons-material/QueryStats';
 import HomeIcon from '@mui/icons-material/Home';
 import Diversity3Icon from '@mui/icons-material/Diversity3';
+import LogoutIcon from '@mui/icons-material/Logout';
 
-export default function MenuDrawer() {
+export default function MenuDrawer({ onLogout }) {
   const [open, setOpen] = useState(false);
 
   const toggleDrawer = (newOpen) => () => {
     setOpen(newOpen);
   };
 
+  const handleLogout = async () => {
+    await onLogout();
+    setOpen(false);
+  }
+
   const DrawerList = (
     <Box id="drawer" sx={{ width: 250 }} role="presentation" onClick={toggleDrawer(false)}>
       <List>
-      <ListItem disablePadding>
+        <ListItem disablePadding>
           <NavLink
             to={`/`}
             className={({ isActive, isPending }) =>
@@ -122,6 +130,14 @@ export default function MenuDrawer() {
               <ListItemText primary={"Profil"} />
             </ListItemButton>
           </NavLink>
+        </ListItem>
+        <ListItem disablePadding>
+          <ListItemButton onClick={handleLogout}>
+            <ListItemIcon>
+              <LogoutIcon />
+            </ListItemIcon>
+            <ListItemText primary={"Logout"} />
+          </ListItemButton>
         </ListItem>
       </List>
     </Box>

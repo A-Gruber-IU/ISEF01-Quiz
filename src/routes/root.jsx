@@ -1,17 +1,18 @@
 import { Outlet, useNavigation } from 'react-router-dom';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Container } from '@mui/material';
 import BottomNav from '../Layout/BottomNav';
 import TopNav from '../Layout/TopNav';
-import Login from '../Login';
-
+import Login from '../User/Login';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+
+import { UserContext } from '../User/UserContext';
 
 // Firebase imports
 import { initializeApp } from "firebase/app";
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 import { getFirestore } from "firebase/firestore";
-import { getAuth, connectAuthEmulator } from "firebase/auth";
+import { getAuth, connectAuthEmulator, signOut } from "firebase/auth";
 
 // Firebase SDK configuration object
 const firebaseConfig = {
@@ -41,11 +42,12 @@ const iuTheme = createTheme({
     },
 });
 
-// Check if we're in development mode
+// Check if development mode
 const isDevelopment = import.meta.env.DEV;
 
 export default function Root() {
-    const [loggedIn, setLoggedIn] = useState(false);
+    
+    const [activeUser, setActiveUser] = useState(null);
     const navigation = useNavigation();
 
     const app = useMemo(() => initializeApp(firebaseConfig), []);
@@ -58,32 +60,43 @@ export default function Root() {
         } else {
             // Production mode
             initializeAppCheck(app, {
-                provider: new ReCaptchaV3Provider('YOUR_RECAPTCHA_SITE_KEY'),
+                provider: new ReCaptchaV3Provider('6LeDu0cqAAAAAKvIvMe_3__CciQMAQCr1M4-uOrD'),
                 isTokenAutoRefreshEnabled: true
             });
         }
     }, [app, auth]);
 
-    if (loggedIn) {
+    const handleLogout = useCallback(async () => {
+        try {
+            await signOut(auth);
+            setActiveUser(null);
+        } catch (error) {
+            console.error("Error signing out: ", error);
+        }
+    }, [auth]);
+
+    if (activeUser) {
         return (
             <ThemeProvider theme={iuTheme}>
-                <TopNav />
-                <div
-                    id="mainView"
-                    className={
-                        navigation.state === "loading" ? "loading" : ""
-                    }
-                >
-                    <Container sx={{ py: 7 }}>
-                        <Outlet />
-                    </Container>
-                </div>
-                <BottomNav />
+                <UserContext.Provider value={activeUser}>
+                    <TopNav onLogout={handleLogout} />
+                    <div
+                        id="mainView"
+                        className={
+                            navigation.state === "loading" ? "loading" : ""
+                        }
+                    >
+                        <Container sx={{ py: 9 }}>
+                            <Outlet />
+                        </Container>
+                    </div>
+                    <BottomNav />
+                </UserContext.Provider>
             </ThemeProvider>
         );
     } else {
         return (
-            <Login auth={auth} setLoggedIn={setLoggedIn} />
+            <Login auth={auth} setActiveUser={setActiveUser} />
         )
     }
 }

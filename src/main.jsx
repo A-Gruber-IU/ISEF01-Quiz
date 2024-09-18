@@ -10,14 +10,14 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
 import Root from './routes/root.jsx';
 import ErrorPage from './errorPage.jsx';
-import SinglePlay from './SinglePlay.jsx';
-import CoopPlay from './CoopPlay.jsx';
-import Competition from './Competition.jsx';
-import Profile from './Profile.jsx';
+import SinglePlay from './Game/SinglePlay.jsx';
+import CoopPlay from './Game/CoopPlay.jsx';
+import Competition from './Game/Competition.jsx';
+import Profile from './User/Profile.jsx';
 import Dashboard from './Dashboard.jsx';
 import Index from './routes/index.jsx';
-import Impressum from './Impressum.jsx';
-import Datenschutz from './Datenschutz.jsx';
+import Impressum from './Legal/Impressum.jsx';
+import Datenschutz from './Legal/Datenschutz.jsx';
 
 
 const router = createBrowserRouter([
