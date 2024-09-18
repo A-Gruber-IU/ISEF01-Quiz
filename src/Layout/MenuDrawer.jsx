@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 
-import { signOut } from 'firebase/auth';
-
 import "./styles.css";
 
 import IconButton from '@mui/material/IconButton';

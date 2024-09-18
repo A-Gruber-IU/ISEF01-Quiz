@@ -28,14 +28,17 @@ const firebaseConfig = {
 const iuTheme = createTheme({
     palette: {
         primary: {
-            main: '#F6F4F5',
-        },
+            light: '#f2f0f1',
+            main: '#efedee',
+            dark: '#a7a5a6',
+            contrastText: '#000',
+          },
         secondary: {
-            main: '#55FF4D',
-        },
-        tertiary: {
-            main: '#D9D9DD',
-        },
+            light: '#5f8eff',
+            main: '#3772ff',
+            dark: '#264fb2',
+            contrastText: '#fff',
+          },
         plainBlack: {
             main: '#010101',
         },

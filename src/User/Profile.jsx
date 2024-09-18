@@ -1,11 +1,11 @@
 import { useState, useContext } from 'react';
 import { UserContext } from '../User/UserContext';
-import { Typography, Paper, TextField, Button, Snackbar } from '@mui/material';
+import { updatePassword, updateProfile, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import { Typography, Paper, TextField, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormHelperText } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import EditIcon from '@mui/icons-material/Edit';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
-import { updateProfile } from 'firebase/auth';
 import '@fontsource/source-sans-pro/400.css';
 import "../Layout/styles.css";
 
@@ -13,8 +13,11 @@ export default function Profile() {
     const user = useContext(UserContext);
     const [isEditing, setIsEditing] = useState(false);
     const [newDisplayName, setNewDisplayName] = useState('');
-    const [snackbarOpen, setSnackbarOpen] = useState(false);
-    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmNewPassword, setConfirmNewPassword] = useState("");
+    const [passwordError, setPasswordError] = useState("");
 
     if (!user) {
         return (
@@ -33,12 +36,8 @@ export default function Profile() {
         try {
             await updateProfile(user, { displayName: newDisplayName });
             setIsEditing(false);
-            setSnackbarMessage('Display name updated successfully!');
-            setSnackbarOpen(true);
         } catch (error) {
-            console.error('Error updating display name:', error);
-            setSnackbarMessage('Failed to update display name. Please try again.');
-            setSnackbarOpen(true);
+            console.error('Nutzername konnte nicht geändert werden:', error);
         }
     };
 
@@ -46,9 +45,43 @@ export default function Profile() {
         setIsEditing(false);
     };
 
+    const handleClickDialogOpen = () => {
+        setDialogOpen(true);
+        setPasswordError("");
+    };
+
+    const handleDialogClose = () => {
+        setDialogOpen(false);
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmNewPassword("");
+        setPasswordError("");
+    };
+
+    const handlePasswordChange = async (event) => {
+        event.preventDefault();
+        if (newPassword !== confirmNewPassword) {
+            setPasswordError("Neue Passwörter stimmen nicht überein.");
+            return;
+        }
+
+        try {
+            const credential = EmailAuthProvider.credential(
+                user.email,
+                currentPassword
+            );
+            await reauthenticateWithCredential(user, credential);
+            await updatePassword(user, newPassword);
+            handleDialogClose();
+        } catch (error) {
+            console.error("Fehler beim Ändern des Passworts:", error);
+            setPasswordError("Passwort konnte nicht geändert werden. Überprüfen dein aktuelles Passwort und versuch es erneut.");
+        }
+    };
+
     let profileItems = [
-        { 
-            label: 'Nutzername', 
+        {
+            label: 'Nutzername',
             value: user.displayName,
             editable: true
         },
@@ -100,15 +133,15 @@ export default function Profile() {
                             {item.editable && (
                                 isEditing ? (
                                     <>
-                                        <Button onClick={handleSave} startIcon={<CheckIcon color='success' />} size="small" sx={{ marginLeft: 1 }}>
-                                            Save
+                                        <Button onClick={handleSave} startIcon={<CheckIcon />} size="small" sx={{ marginLeft: 1 }} color="success" variant="text">
+                                            Speichern
                                         </Button>
-                                        <Button onClick={handleCancel} startIcon={<CloseIcon color='warning' />} size="small" sx={{ marginLeft: 1 }}>
-                                            Cancel
+                                        <Button onClick={handleCancel} startIcon={<CloseIcon />} size="small" sx={{ marginLeft: 1 }} color="error" variant="text">
+                                            Abbruch
                                         </Button>
                                     </>
                                 ) : (
-                                    <Button color='plainBlack' onClick={handleEdit} startIcon={<EditIcon color='plainBlack' />} size="small" sx={{ marginLeft: 1 }}>
+                                    <Button onClick={handleEdit} startIcon={<EditIcon />} size="small" sx={{ marginLeft: 1 }} color="plainBlack" variant="text">
                                         Bearbeiten
                                     </Button>
                                 )
@@ -116,13 +149,63 @@ export default function Profile() {
                         </Typography>
                     </Grid>
                 ))}
+                <Grid mt={2} size={12} >
+                    <Button color="secondary" variant="contained" onClick={handleClickDialogOpen}>
+                        Passwort ändern
+                    </Button>
+                </Grid>
             </Grid>
-            <Snackbar
-                open={snackbarOpen}
-                autoHideDuration={6000}
-                onClose={() => setSnackbarOpen(false)}
-                message={snackbarMessage}
-            />
+
+            <Dialog
+                open={dialogOpen}
+                onClose={handleDialogClose}
+                aria-labelledby="password-change-dialog-title"
+            >
+                <DialogTitle id="password-change-dialog-title">Passwort ändern</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Bitte geben Sie Ihr aktuelles Passwort ein und wählen Sie ein neues Passwort.
+                    </DialogContentText>
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        id="current-password"
+                        label="Aktuelles Passwort"
+                        type="password"
+                        fullWidth
+                        variant="outlined"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                    />
+                    <TextField
+                        margin="dense"
+                        id="new-password"
+                        label="Neues Passwort"
+                        type="password"
+                        fullWidth
+                        variant="outlined"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                    />
+                    <TextField
+                        margin="dense"
+                        id="confirm-new-password"
+                        label="Neues Passwort bestätigen"
+                        type="password"
+                        fullWidth
+                        variant="outlined"
+                        value={confirmNewPassword}
+                        onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    />
+                    {passwordError && (
+                        <FormHelperText error>{passwordError}</FormHelperText>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button color="secondary" variant="contained" onClick={handleDialogClose}>Abbrechen</Button>
+                    <Button color="secondary" variant="contained" onClick={handlePasswordChange}>Passwort ändern</Button>
+                </DialogActions>
+            </Dialog>
         </Paper>
     );
 }
