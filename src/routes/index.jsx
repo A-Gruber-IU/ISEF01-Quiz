@@ -87,7 +87,7 @@ export default function Index() {
                                 </NavLink>
                                 <NavLink className="navlink" to={"competition"}>
                                     <p>
-                                        Competititon-Modus
+                                        Competition-Modus
                                     </p>
                                 </NavLink>
                             </Stack>

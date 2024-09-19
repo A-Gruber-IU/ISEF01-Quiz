@@ -104,8 +104,8 @@ export default function Profile() {
                 DEIN PROFIL
             </Typography>
             <Grid container spacing={2}>
-                {profileItems.map((item, index) => (
-                    <Grid size={12} key={index}>
+                {profileItems.map((item) => (
+                    <Grid size={12} key={item.label}>
                         <Typography
                             component="div"
                             className='normText'

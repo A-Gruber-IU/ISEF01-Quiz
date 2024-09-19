@@ -16,6 +16,14 @@
     font-weight: normal; /* Normaler Text */
 }
 
+.bottomNavLink {
+    color: inherit; /* Vererbt die Textfarbe des Eltern-Elements */
+    text-decoration: none; /* Entfernt die Unterstreichung */
+    font-weight: normal; /* Normaler Text */
+    align-items: center;
+    text-align: center;
+}
+
 .iuHeadline1 {
     margin: 16px 0;
     padding: 0 8px;
@@ -41,13 +49,38 @@
 }
 
 .normText {
-    margin: 0px 0px;
-    padding: 0 0px;
+    margin: 1 1;
+    padding: 1 1;
     display: inline-block;
     font-family: 'Source Sans Pro', sans-serif;
     font-weight: 400;
     letter-spacing: 0.1rem;
     color: black;
     text-decoration: none;
+    background-color: none;
+}
+
+.smallDenseText {
+    margin: 0 0;
+    padding: 0 0;
+    display: inline-block;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: small;
+    font-weight: 400;
+    letter-spacing: 0.02rem;
+    color: rgba(0, 0, 0, 0.6);
+    text-decoration: none;
+    background-color: none;
+}
+
+.normHeadline {
+    margin: 5 5;
+    padding: 5 5;
+    display: inline-block;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.1rem;
+    color: black;
+    text-decoration: "bold";
     background-color: none;
 }

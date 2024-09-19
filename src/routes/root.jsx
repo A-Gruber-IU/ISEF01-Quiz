@@ -32,13 +32,16 @@ const iuTheme = createTheme({
             main: '#efedee',
             dark: '#a7a5a6',
             contrastText: '#000',
-          },
+        },
         secondary: {
             light: '#5f8eff',
             main: '#3772ff',
             dark: '#264fb2',
             contrastText: '#fff',
-          },
+        },
+        darkGrey: {
+            main: '#00000099'
+        },
         plainBlack: {
             main: '#010101',
         },
@@ -49,7 +52,7 @@ const iuTheme = createTheme({
 const isDevelopment = import.meta.env.DEV;
 
 export default function Root() {
-    
+
     const [activeUser, setActiveUser] = useState(null);
     const navigation = useNavigation();
 

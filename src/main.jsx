@@ -16,8 +16,9 @@ import Competition from './Game/Competition.jsx';
 import Profile from './User/Profile.jsx';
 import Dashboard from './Dashboard.jsx';
 import Index from './routes/index.jsx';
-import Impressum from './Legal/Impressum.jsx';
-import Datenschutz from './Legal/Datenschutz.jsx';
+import Impressum from './Info/Impressum.jsx';
+import Datenschutz from './Info/Datenschutz.jsx';
+import Faqs from './Info/Faqs.jsx';
 
 
 const router = createBrowserRouter([
@@ -54,6 +55,10 @@ const router = createBrowserRouter([
       {
         path: "datenschutz",
         element: <Datenschutz />,
+      },
+      {
+        path: "faq",
+        element: <Faqs />,
       },
     ],
   },
