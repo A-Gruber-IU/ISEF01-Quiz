@@ -1,12 +1,10 @@
 import Box from '@mui/material/Box';
-import BottomNavigation from '@mui/material/BottomNavigation';
-import BottomNavigationAction from '@mui/material/BottomNavigationAction';
 import SchoolIcon from '@mui/icons-material/School';
 import PolicyIcon from '@mui/icons-material/Policy';
 import InfoIcon from '@mui/icons-material/Info';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import { Link, NavLink } from 'react-router-dom';
-import { Button, IconButton, Stack } from '@mui/material';
+import { NavLink } from 'react-router-dom';
+import { IconButton, Stack } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 
 export default function BottomNav() {

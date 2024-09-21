@@ -1,15 +1,3 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * const {onCall} = require("firebase-functions/v2/https");
- * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
-
-const {onRequest} = require("firebase-functions/v2/https");
-const logger = require("firebase-functions/logger");
-
 
 // The following cloud function for presence detection was provided by Firebase/Google under Apache License.
 // https://github.com/firebase/functions-samples/tree/703c0359eacf07a551751d1319d34f912a2cd828/Node-1st-gen/presence-firestore
@@ -30,19 +18,17 @@ const logger = require("firebase-functions/logger");
  * limitations under the License.
  */
 
-// [START presence_sync_function]
-const functions = require('firebase-functions/v1');
-const admin = require('firebase-admin');
-admin.initializeApp();
+
+import { database, logger } from 'firebase-functions/v1';
+import { initializeApp, firestore as _firestore } from 'firebase-admin';
+initializeApp();
 
 // Since this code will be running in the Cloud Functions environment
 // we call initialize Firestore without any arguments because it
 // detects authentication from the environment.
-const firestore = admin.firestore();
+const firestore = _firestore();
 
-// Create a new function which is triggered on changes to /status/{uid}
-// Note: This is a Realtime Database trigger, *not* Firestore.
-exports.onUserStatusChanged = functions.database.ref('/status/{uid}').onUpdate(
+export const onUserStatusChanged = database.ref('/status/{uid}').onUpdate(
     async (change, context) => {
       // Get the data written to Realtime Database
       const eventStatus = change.after.val();
@@ -57,7 +43,7 @@ exports.onUserStatusChanged = functions.database.ref('/status/{uid}').onUpdate(
       // and compare the timestamps.
       const statusSnapshot = await change.after.ref.once('value');
       const status = statusSnapshot.val();
-      functions.logger.log(status, eventStatus);
+      logger.log(status, eventStatus);
       // If the current timestamp for this data is newer than
       // the data that triggered this event, we exit this function.
       if (status.last_changed > eventStatus.last_changed) {
@@ -70,7 +56,7 @@ exports.onUserStatusChanged = functions.database.ref('/status/{uid}').onUpdate(
       // ... and write it to Firestore.
       return userStatusFirestoreRef.set(eventStatus);
     });
-// [END presence_sync_function]
+
 
 
 

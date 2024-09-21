@@ -2,8 +2,9 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    match /{allPaths=**} {
-      allow read, write: if false;
+    match /courses/{allPaths=**} {
+      // TODO: Hier sollte man noch weitere Unterscheidungen treffen, aber Schreibberechtigung ist für getDownloadURL nötig
+      allow read, write: if request.auth != null; 
     }
   }
 }

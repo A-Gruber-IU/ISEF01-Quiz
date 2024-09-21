@@ -1,6 +1,6 @@
-import { useState, useContext } from 'react';
-import { UserContext } from '../User/UserContext';
+import { useState } from 'react';
 import { updatePassword, updateProfile, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import { doc, updateDoc } from 'firebase/firestore';
 import { Typography, Paper, TextField, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormHelperText } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import EditIcon from '@mui/icons-material/Edit';
@@ -8,9 +8,11 @@ import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import '@fontsource/source-sans-pro/400.css';
 import "../Layout/styles.css";
+import { useFirebase } from '../useFirebase';
 
 export default function Profile() {
-    const user = useContext(UserContext);
+    const { auth, firestore } = useFirebase();
+    const user = auth.currentUser;
     const [isEditing, setIsEditing] = useState(false);
     const [newDisplayName, setNewDisplayName] = useState('');
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -35,6 +37,9 @@ export default function Profile() {
     const handleSave = async () => {
         try {
             await updateProfile(user, { displayName: newDisplayName });
+            // Update display_name in Firestore
+            const userDocRef = doc(firestore, 'users', user.uid);
+            await updateDoc(userDocRef, { display_name: newDisplayName });
             setIsEditing(false);
         } catch (error) {
             console.error('Nutzername konnte nicht geändert werden:', error);
@@ -79,15 +84,13 @@ export default function Profile() {
         }
     };
 
+    // TODO
+    // Der Flag "editable" gibt nur die Veränderung in der UI frei. 
+    // Um den tatsächlichen Datenzugriff einzuschränken bräuchte es Custom Claims mit der Admin SDK und Cloud Functions (Validierung)
     let profileItems = [
-        {
-            label: 'Nutzername',
-            value: user.displayName,
-            editable: true
-        },
-        { label: 'Email', value: user.email },
-        { label: 'Email verifiziert', value: user.emailVerified ? 'Ja' : 'Nein' },
-        { label: 'Letzte Anmeldung', value: user.metadata.lastSignInTime ? new Date(user.metadata.lastSignInTime).toLocaleString('de-DE') : 'Unbekannt' },
+        { label: 'Nutzername', value: user.displayName, editable: true },
+        { label: 'Email', value: user.email,editable: false },
+        { label: 'Email verifiziert', value: user.emailVerified ? 'Ja' : 'Nein', editable: false },
     ];
 
     return (

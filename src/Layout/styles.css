@@ -76,7 +76,7 @@
 .normHeadline {
     margin: 5 5;
     padding: 5 5;
-    display: inline-block;
+    display: block;
     font-family: 'Source Sans Pro', sans-serif;
     font-weight: 600;
     letter-spacing: 0.1rem;

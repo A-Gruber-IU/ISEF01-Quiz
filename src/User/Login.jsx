@@ -1,3 +1,8 @@
+
+// TODO
+// Registrierung ist in Demo deaktiviert.
+// Registrierung in echter Produktionsumgebung würde Cloude Function voraussetzen, die aktive Kurse mit MyCampus synchronisiert.
+
 import { useState, useEffect, useCallback } from "react";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, AuthErrorCodes } from "firebase/auth";
 import '@fontsource/source-sans-pro/700.css';
@@ -7,7 +12,7 @@ import { TextField, Button, Container, Stack, Alert, Tooltip } from "@mui/materi
 import LoginIcon from '@mui/icons-material/Login';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 
-export default function Login({auth, setActiveUser}) {
+export default function Login({ auth, setActiveUser }) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [validationFeedback, setValidationFeedback] = useState("");
@@ -41,6 +46,8 @@ export default function Login({auth, setActiveUser}) {
         setIsLoading(true);
         try {
             await createUserWithEmailAndPassword(auth, email, password);
+            // TODO
+            // Registrierung der Nutzerdaten im Firestore mit weiteren Daten wie display_name
             setValidationFeedback("Account erfolgreich erstellt!");
         } catch (error) {
             console.error("Error creating account:", error);
@@ -57,7 +64,7 @@ export default function Login({auth, setActiveUser}) {
             setValidationFeedback("Login erfolgreich!");
         } catch (error) {
             console.error("Error logging in:", error);
-            if (error.code == AuthErrorCodes.INVALID_PASSWORD || error.code == AuthErrorCodes.USER_DELETED ) {
+            if (error.code == AuthErrorCodes.INVALID_PASSWORD || error.code == AuthErrorCodes.USER_DELETED) {
                 setValidationFeedback("Falsche Emailadresse oder falsches Passwort.");
             }
         } finally {

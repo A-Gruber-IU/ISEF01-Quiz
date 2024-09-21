@@ -15,7 +15,7 @@ import CoopPlay from './Game/CoopPlay.jsx';
 import Competition from './Game/Competition.jsx';
 import Profile from './User/Profile.jsx';
 import Dashboard from './Dashboard.jsx';
-import Index from './routes/index.jsx';
+import Index from './Startpage/index.jsx';
 import Impressum from './Info/Impressum.jsx';
 import Datenschutz from './Info/Datenschutz.jsx';
 import Faqs from './Info/Faqs.jsx';
