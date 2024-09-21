@@ -25,6 +25,3 @@ dist-ssr
 
 # Firebase cache-files
 *.cache
-
-# Emulation Data
-firebase-export*

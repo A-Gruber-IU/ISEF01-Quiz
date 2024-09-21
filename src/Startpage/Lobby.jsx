@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import { ref, onValue, set, onDisconnect } from 'firebase/database';
 
-import { List, ListItem, ListItemText, ListItemIcon, CircularProgress, Button, ButtonGroup, Chip, Box } from '@mui/material';
+import { List, ListItem, ListItemText, CircularProgress, Button, ButtonGroup, Chip, Box } from '@mui/material';
 import "../Layout/styles.css";
 
 import { useFirebase } from '../useFirebase';
