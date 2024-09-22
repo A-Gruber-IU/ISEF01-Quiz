@@ -8,8 +8,8 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 import { connectAuthEmulator, signOut } from "firebase/auth";
-import { connectFirestoreEmulator } from "firebase/firestore";
-import { connectDatabaseEmulator } from "firebase/database";
+import { connectFirestoreEmulator, getDoc, doc } from "firebase/firestore";
+import { connectDatabaseEmulator, get, ref as databaseRef, remove } from "firebase/database";
 import { connectStorageEmulator } from 'firebase/storage';
 
 import { useFirebase } from '../useFirebase';
@@ -65,12 +65,23 @@ export default function Root() {
     // Logout-Funktion wird für Logout-Button im Drawer-Menü an TopNav-Komponente übergeben
     const handleLogout = useCallback(async () => {
         try {
+            const userDoc = await getDoc(doc(firestore, 'users', auth.currentUser.uid));
+            const courses = (userDoc.data().courses);
+            const removePromises = courses.map(courseId => {
+                const userStatusRef = databaseRef(database, `lobbies/${courseId}/${auth.currentUser.uid}`);
+                return remove(userStatusRef);
+            });
+
+            // Wait for all remove operations to complete
+            await Promise.all(removePromises);
+
+            // Sign out
             await signOut(auth);
             setActiveUser(null);
         } catch (error) {
             console.error("Error signing out: ", error);
         }
-    }, [auth]);
+    }, [auth, database, firestore]);
 
     if (activeUser) {
         return (

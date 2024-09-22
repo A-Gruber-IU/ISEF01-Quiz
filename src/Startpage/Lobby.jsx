@@ -4,6 +4,7 @@ import { ref, onValue, set, onDisconnect } from 'firebase/database';
 
 import { List, ListItem, ListItemText, CircularProgress, Button, ButtonGroup, Chip, Box } from '@mui/material';
 import "../Layout/styles.css";
+import Chat from '../Chat';
 
 import { useFirebase } from '../useFirebase';
 
@@ -143,11 +144,10 @@ export default function Component({ activeCourse }) {
           </ListItem>
         )}
       </List>
-      {/* <LobbyChat 
-        courseId={courseId}
-        users={users}
-        currentUserId={activeUser.uid}
-      /> */}
+      <Chat 
+        chatType="lobby_chats"
+        chatId={courseId}
+      />
     </>
   );
 }
