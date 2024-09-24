@@ -13,12 +13,11 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 import QueryStatsIcon from '@mui/icons-material/QueryStats';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import HomeIcon from '@mui/icons-material/Home';
-import Diversity3Icon from '@mui/icons-material/Diversity3';
 import LogoutIcon from '@mui/icons-material/Logout';
 
 export default function MenuDrawer({ onLogout }) {
@@ -68,46 +67,16 @@ export default function MenuDrawer({ onLogout }) {
         </ListItem>
         <ListItem disablePadding>
           <NavLink
-            to={`single`}
+            to={`faq`}
             className={({ isActive, isPending }) =>
               isActive ? "active" : isPending ? "pending" : ""
             }
           >
             <ListItemButton>
               <ListItemIcon>
-                <SportsEsportsIcon />
+                <HelpOutlineIcon />
               </ListItemIcon>
-              <ListItemText primary={"Einzelspieler"} />
-            </ListItemButton>
-          </NavLink>
-        </ListItem>
-        <ListItem disablePadding>
-          <NavLink
-            to={`competition`}
-            className={({ isActive, isPending }) =>
-              isActive ? "active" : isPending ? "pending" : ""
-            }
-          >
-            <ListItemButton>
-              <ListItemIcon>
-                <EmojiEventsIcon />
-              </ListItemIcon>
-              <ListItemText primary={"Competition"} />
-            </ListItemButton>
-          </NavLink>
-        </ListItem>
-        <ListItem disablePadding>
-          <NavLink
-            to={`coop`}
-            className={({ isActive, isPending }) =>
-              isActive ? "active" : isPending ? "pending" : ""
-            }
-          >
-            <ListItemButton>
-              <ListItemIcon>
-                <Diversity3Icon />
-              </ListItemIcon>
-              <ListItemText primary={"Coop"} />
+              <ListItemText primary={"FAQ"} />
             </ListItemButton>
           </NavLink>
         </ListItem>

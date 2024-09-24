@@ -13,22 +13,22 @@ export function CourseSelector({ activeCourse, handleChangeCourse }) {
   const { auth, storage, firestore } = useFirebase();
   const activeUser = auth.currentUser;
 
-  async function fetchUserCourses() {
-    try {
-      if (activeUser) {
-        console.log("Active user ID:", activeUser.uid);
-        const userDoc = await getDoc(doc(firestore, 'users', activeUser.uid));
-        setUserCourses(userDoc.data().courses);
-        console.log("User's courses:", userCourses);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  }
 
   useEffect(() => {
+    async function fetchUserCourses() {
+      try {
+        if (activeUser) {
+          console.log("Active user ID:", activeUser.uid);
+          const userDoc = await getDoc(doc(firestore, 'users', activeUser.uid));
+          setUserCourses(userDoc.data().courses);
+          console.log("userDoc.data().courses: ", userDoc.data().courses)
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
     fetchUserCourses();
-  }, []);
+  }, [activeUser, firestore]);
 
   useEffect(() => {
     async function fetchCoursesData() {
@@ -46,7 +46,6 @@ export function CourseSelector({ activeCourse, handleChangeCourse }) {
             };
           }
         });
-
         const resolvedCourses = await Promise.all(coursePromises);
         setCoursesData(resolvedCourses.filter(course => course !== null)); // Filter out null values
       } catch (error) {

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { ref as storageRef, getDownloadURL } from 'firebase/storage';
 import { ref as databaseRef, set, remove, onDisconnect } from 'firebase/database';
-import { useFirebase } from '../useFirebase';
+import { useFirebase } from './useFirebase';
 
 export function useActiveCourse(userId) {
   const [activeCourse, setActiveCourse] = useState(null);

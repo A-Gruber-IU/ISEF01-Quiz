@@ -7,6 +7,10 @@
           ".write": "$user_id === auth.uid"
         }
       }
+    },
+    "private_lobbies": {
+      ".read": "auth != null",
+      ".write": "auth != null"
     }
   }
 }

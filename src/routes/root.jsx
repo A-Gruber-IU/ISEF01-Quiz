@@ -9,7 +9,7 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 import { connectAuthEmulator, signOut } from "firebase/auth";
 import { connectFirestoreEmulator, getDoc, doc } from "firebase/firestore";
-import { connectDatabaseEmulator, get, ref as databaseRef, remove } from "firebase/database";
+import { connectDatabaseEmulator, ref as databaseRef, remove } from "firebase/database";
 import { connectStorageEmulator } from 'firebase/storage';
 
 import { useFirebase } from '../useFirebase';
@@ -54,13 +54,17 @@ export default function Root() {
             connectDatabaseEmulator(database, "127.0.0.1", 9000);
             connectStorageEmulator(storage, "127.0.0.1", 9199);
         } else {
-            // Production mode
+            // Production mode: Firebase App Check needed for access to resources
             initializeAppCheck(app, {
                 provider: new ReCaptchaV3Provider('6LeDu0cqAAAAAKvIvMe_3__CciQMAQCr1M4-uOrD'),
                 isTokenAutoRefreshEnabled: true
             });
         }
     }, [app, auth]);
+
+    useEffect(() => {
+        console.log("New activeUser:", activeUser);
+    }, [activeUser]);
 
     // Logout-Funktion wird für Logout-Button im Drawer-Menü an TopNav-Komponente übergeben
     const handleLogout = useCallback(async () => {

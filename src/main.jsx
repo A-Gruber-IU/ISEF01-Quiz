@@ -11,15 +11,14 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Root from './routes/root.jsx';
 import ErrorPage from './errorPage.jsx';
 import SinglePlay from './Game/SinglePlay.jsx';
-import CoopPlay from './Game/CoopPlay.jsx';
-import Competition from './Game/Competition.jsx';
+import CoopRoute from './Game/CoopRoute.jsx';
+import CompetitionRoute from './Game/CompetitionRoute.jsx';
 import Profile from './User/Profile.jsx';
 import Dashboard from './Dashboard.jsx';
 import Index from './Startpage/index.jsx';
 import Impressum from './Info/Impressum.jsx';
 import Datenschutz from './Info/Datenschutz.jsx';
 import Faqs from './Info/Faqs.jsx';
-
 
 const router = createBrowserRouter([
   {
@@ -37,12 +36,12 @@ const router = createBrowserRouter([
         element: <SinglePlay />,
       },
       {
-        path: "coop",
-        element: <CoopPlay />,
+        path: "coop/:gameId",
+        element: <CoopRoute />,
       },
       {
-        path: "competition",
-        element: <Competition />,
+        path: "competition/:gameId",
+        element: <CompetitionRoute />,
       },
       {
         path: "profile",

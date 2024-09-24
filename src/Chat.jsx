@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp, getDoc, doc, setDoc } from 'firebase/firestore';
 import { useFirebase } from './useFirebase';
 import { Box, TextField, Button, List, ListItem, ListItemText, Typography, Paper, Snackbar } from '@mui/material';
 
@@ -20,7 +20,7 @@ export default function Chat({ chatType, chatId }) {
     const chatRef = collection(firestore, chatType, chatId, 'messages');
     const q = query(chatRef, orderBy('timestamp', 'asc'), limit(50));
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const checkForMessages = onSnapshot(q, (snapshot) => {
       const newMessages = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -33,7 +33,7 @@ export default function Chat({ chatType, chatId }) {
       setError("Nachrichten konnten nicht geladen werden. Versuch es später noch einmal.");
     });
 
-    return () => unsubscribe();
+    return () => checkForMessages();
   }, [chatId, chatType, firestore]);
 
   useEffect(() => {
@@ -49,38 +49,36 @@ export default function Chat({ chatType, chatId }) {
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (newMessage.trim() === '') return;
-    const chatRef = collection(firestore, chatType, chatId, 'messages');
-
+    
     try {
       if (chatType === 'private_chats') {
-        const privateChatDoc = await getDoc(doc(firestore, 'private_chats', chatId));
-        if (!privateChatDoc.exists() || !privateChatDoc.data().participants.includes(activeUser.uid)) {
+        const privateChatDocRef = doc(firestore, 'private_chats', chatId);
+        const privateChatDoc = await getDoc(privateChatDocRef);
+        if (!privateChatDoc.exists()) {
+          throw new Error("Chat does not exist.");
+        } else if (!privateChatDoc.data().users.includes(activeUser.uid)) {
+          console.log("User-ID:", activeUser.uid);
           throw new Error("You are not a participant in this chat.");
         }
       }
-
+  
+      const chatRef = collection(firestore, chatType, chatId, 'messages');
       await addDoc(chatRef, {
         text: newMessage,
         authorId: activeUser.uid,
         authorName: activeUser.displayName,
         timestamp: serverTimestamp(),
       });
-
+  
       setNewMessage('');
     } catch (error) {
       console.error("Error sending message:", error);
-      setError("Fehler beim Senden der Nachricht.");
+      setError("Fehler beim Senden der Nachricht");
     }
   };
 
-  // TODO 
-  // Error Warning: validateDOMNesting(...): <div> cannot appear as a descendant of <p>.
-
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '400px', width: '100%', maxWidth: '600px' }}>
-      <Typography variant="h6" component="h3" gutterBottom>
-        Chat
-      </Typography>
       <Paper 
         elevation={3} 
         sx={{ flex: 1, overflow: 'auto', mb: 2, p: 2 }}
