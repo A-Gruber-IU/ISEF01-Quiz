@@ -10,7 +10,7 @@ import Lobby from './Lobby';
 export default function Index() {
 
     return (
-        <Box sx={{ flexGrow: 1 }}>
+        <Box>
             <Typography
                 variant="h4"
                 noWrap

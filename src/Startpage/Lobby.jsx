@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { ref as databaseRef, onValue, set, onDisconnect, push, get, remove } from 'firebase/database';
-import { useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 
-import { List, ListItem, ListItemText, CircularProgress, Button, Chip, Box, Paper, Stack, IconButton } from '@mui/material';
+import { List, ListItem, ListItemText, CircularProgress, Button, Chip, Box, Paper, Stack, IconButton, Typography, Card, CardHeader, CardContent } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import "../Layout/styles.css";
 import Chat from '../Chat';
@@ -49,13 +49,17 @@ export default function Lobby() {
 
   useEffect(() => {
     async function initializeCurrentUserStatuses() {
-      const userStatusRef = databaseRef(database, `lobbies/${courseId}/${activeUser.uid}`);
-      const userStatusSnapshot = await get(userStatusRef);
-      const userStatusVal = userStatusSnapshot.val();
-      setCurrentUserStatuses(userStatusVal);
+      if (courseId && activeUser) {
+        const userStatusRef = databaseRef(database, `lobbies/${courseId}/${activeUser.uid}`);
+        const userStatusSnapshot = await get(userStatusRef);
+        const userStatusVal = userStatusSnapshot.val();
+        if (userStatusVal) {
+          setCurrentUserStatuses(userStatusVal);
+        }
+      }
     }
     initializeCurrentUserStatuses();
-  }, [activeUser.uid, courseId, database]);
+  }, [activeUser, courseId, database]);
 
   useEffect(() => {
     console.log("useEffect Hook triggered for connection status and user data.");
@@ -101,7 +105,7 @@ export default function Lobby() {
 
         const matchingUser = users.find(user =>
           user.id !== activeUser.uid &&
-          ((user.statuses["coop"] && currentUserStatuses["coop"]) || (user.statuses["competition"] && currentUserStatuses["competition"])) &&
+          ((user.statuses["coop"] && currentUserStatuses.coop) || (user.statuses["competition"] && currentUserStatuses.competition)) &&
           user.statuses["matching_user_id"] == activeUser.uid
         );
 
@@ -141,9 +145,9 @@ export default function Lobby() {
 
 
   async function handleStatusChange(status) {
-    let newStatuses = JSON.parse(JSON.stringify(currentUserStatuses));
-    console.log("status: ", status);
+    let newStatuses = { ...currentUserStatuses };
     newStatuses[status] = !currentUserStatuses[status];
+    console.log("status: ", status);
     console.log("newStatuses after initial change: ", newStatuses);
 
     let gameId = null;
@@ -205,6 +209,7 @@ export default function Lobby() {
       }
     }
     if (activeUser && courseId) {
+      // Change Status of current user in database
       const userStatusRef = databaseRef(database, `lobbies/${courseId}/${activeUser.uid}`);
       console.log("newStatuses before Update in DB: ", newStatuses)
       await set(userStatusRef, newStatuses);
@@ -223,7 +228,41 @@ export default function Lobby() {
 
   return (
     <>
-      <Grid container spacing={2} size={{ xs: 12, md: 8, lg: 7, xl: 6 }}>
+      <Grid container marginBottom={3} spacing={2} size={{ xs: 12, md: 8, lg: 7, xl: 6 }}>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <NavLink className="navlink" to={"single"}>
+            <Paper elevation={8} sx={{ py: 2, px: 2, textAlign: "center" }}>
+              <Box>
+                <Stack sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <IconButton aria-label="Singleplayer-Modus">
+                    <SportsEsportsIcon fontSize='large' />
+                  </IconButton>
+                  <Button color='plainBlack' variant='text'>
+                    Singleplayer-Modus
+                  </Button>
+                  <p className='smallDenseText'>Knack den Highscore!</p>
+                </Stack>
+              </Box>
+            </Paper>
+          </NavLink>
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <NavLink className="navlink" to={"dashboard"}>
+            <Paper elevation={8} sx={{ py: 2, px: 2, textAlign: "center" }}>
+              <Box>
+                <Stack sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <IconButton aria-label="Dashboard">
+                    <QueryStatsIcon fontSize='large' />
+                  </IconButton>
+                  <Button color='plainBlack' variant='text'>
+                    Dashboard
+                  </Button>
+                  <p className='smallDenseText'>Check deinen Fortschritt!</p>
+                </Stack>
+              </Box>
+            </Paper>
+          </NavLink>
+        </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
           <Paper elevation={8} sx={{ py: 2, px: 2, textAlign: "center", backgroundColor: currentUserStatuses.coop ? "#55FF4D" : "" }} onClick={() => handleStatusChange("coop")}>
             <Box>
@@ -234,7 +273,7 @@ export default function Lobby() {
                 <Button color='plainBlack' variant='text' onClick={() => handleStatusChange("coop")}>
                   Coop-Modus
                 </Button>
-                {currentUserStatuses["coop"] ? <p className='smallDenseText' > Suche Mitspieler!</p> : <p className='smallDenseText'>Testet euer Wissen gemeinsam!</p>}
+                {currentUserStatuses.coop ? <p className='smallDenseText' > Suche Mitspieler!</p> : <p className='smallDenseText'>Testet euer Wissen gemeinsam!</p>}
               </Stack>
             </Box>
           </Paper>
@@ -249,37 +288,7 @@ export default function Lobby() {
                 <Button color='plainBlack' variant='text' onClick={() => handleStatusChange("competition")}>
                   Competition-Modus
                 </Button>
-                {currentUserStatuses["competition"] ? <p className='smallDenseText' >Suche Gegenspieler!</p> : <p className='smallDenseText'>Messe dich mit anderen!</p>}
-              </Stack>
-            </Box>
-          </Paper>
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Paper elevation={8} sx={{ py: 2, px: 2, textAlign: "center" }} onClick={() => navigate("single")}>
-            <Box>
-              <Stack sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <IconButton aria-label="Singleplayer-Modus" onClick={() => navigate("single")}>
-                  <SportsEsportsIcon fontSize='large' />
-                </IconButton>
-                <Button color='plainBlack' variant='text' onClick={() => navigate("single")}>
-                  Singleplayer-Modus
-                </Button>
-                <p className='smallDenseText'>Knack den Highscore!</p>
-              </Stack>
-            </Box>
-          </Paper>
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Paper elevation={8} sx={{ py: 2, px: 2, textAlign: "center" }} onClick={() => navigate("dashboard")}>
-            <Box>
-              <Stack sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <IconButton aria-label="Dashboard" onClick={() => navigate("dashboard")}>
-                  <QueryStatsIcon fontSize='large' />
-                </IconButton>
-                <Button color='plainBlack' variant='text' onClick={() => navigate("dashboard")}>
-                  Dashboard
-                </Button>
-                <p className='smallDenseText'>Check deinen Fortschritt!</p>
+                {currentUserStatuses.competition ? <p className='smallDenseText' >Suche Gegenspieler!</p> : <p className='smallDenseText'>Messe dich mit anderen!</p>}
               </Stack>
             </Box>
           </Paper>
@@ -287,56 +296,55 @@ export default function Lobby() {
       </Grid>
       <h2 className='normHeadline'>Kurs-Lobby</h2>
       <Grid container spacing={2}>
-        <Grid size={{ xs: 12, sm: 5, md: 3 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <ActiveCourseDisplay
             activeCourse={activeCourse}
             courseLoading={courseLoading}
             handleChangeCourse={handleChangeCourse}
           />
         </Grid>
-        <Grid size={{ xs: 12, md: 8 }}>
-          <Grid>
-          <Chat
-            chatType="lobby_chats"
-            chatId={courseId}
-          />
-          </Grid>
-          <Grid>
-            <Paper sx={{marginTop: 3, maxWidth: "10rem"}}>
-            <h4 className='normHeadline' style={{marginTop: 2}}>Online Studierende</h4>
-              <List>
-                {users.map((user) => user.statuses.online && (
-                  <ListItem key={user.id}>
-                    <ListItemText
-                      primary={user.name === activeUser.displayName ? "Du" : user.name}
-                      secondary={
-                        <Box>
-                          {user.statuses.coop && (
-                            <Chip
-                              label={"coop"}
-                              color={"success"}
-                              size="small"
-                              style={{ marginRight: 4 }} />)}
-                          {user.statuses.competition && (
-                            <Chip
-                              label={"competition"}
-                              color={"warning"}
-                              size="small"
-                              style={{ marginRight: 4 }} />)}
-                        </Box>
-                      }
-                    />
-                  </ListItem>
-                ))}
-                {users.length === 0 && (
-                  <ListItem>
-                    <ListItemText primary="Keine anderen Studierenden online." />
-                  </ListItem>
-                )}
-              </List>
-            </Paper>
-          </Grid>
+        <Grid size={{ xs: 12, sm: 10, md: 8, lg: 6 }}>
+          <Chat chatType="lobby_chats" chatId={courseId} />
         </Grid>
+        <Card sx={{ marginBottom: 3, width: "13rem" }}>
+          <CardContent marginLeft={2} marginTop={2}>
+            <Typography variant="subtitle2" component="subtitle2" className='normHeadline' gutterBottom>
+              WER IST ONLINE?
+            </Typography>
+            <List>
+              {users.map((user) => user.statuses.online && (
+                <ListItem key={user.id}>
+                  <ListItemText
+                    primary={user.name === activeUser.displayName ? " > Du" : ` > ${user.name}`}
+                    secondary={
+                      <Box>
+                        {user.statuses.coop && (
+                          <Chip
+                            label={"coop"}
+                            color={"success"}
+                            size="small"
+                            style={{ marginRight: 4, textOverflow: "ellipsis" }} />)}
+                        {user.statuses.competition && (
+                          <Chip
+                            label={"competition"}
+                            color={"warning"}
+                            size="small"
+                            style={{ marginRight: 4, textOverflow: "ellipsis" }} />)}
+                      </Box>
+                    }
+                  />
+                </ListItem>
+              ))}
+              {users.length === 0 && (
+                <ListItem>
+                  <ListItemText primary="Keine anderen Studierenden online." />
+                </ListItem>
+              )}
+            </List>
+          </CardContent>
+        </Card>
+
+
       </Grid>
     </>
   );

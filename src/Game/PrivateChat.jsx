@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
-import { ref, onValue, remove } from 'firebase/database';
-import { Box, Typography, Button } from '@mui/material';
+import { ref, onValue } from 'firebase/database';
+import { Box, Typography } from '@mui/material';
 import Chat from '../Chat';
 import { useFirebase } from '../useFirebase';
 
@@ -31,11 +31,6 @@ export default function PrivateChat({chatId}) {
 
     unsubscribe();
   }, [chatId, firestore, database, auth, navigate]);
-
-  async function handleExit() {
-    await remove(ref(database, `private_lobbies/${chatId}`));
-    navigate('/dashboard');
-  };
 
   if (!lobbyData || !otherUser) {
     return <Typography>Loading...</Typography>;

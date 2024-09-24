@@ -78,7 +78,7 @@ export default function Chat({ chatType, chatId }) {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '400px', width: '100%', maxWidth: '600px' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '400px', width: '100%', maxWidth: '800px' }}>
       <Paper 
         elevation={3} 
         sx={{ flex: 1, overflow: 'auto', mb: 2, p: 2 }}
@@ -96,7 +96,7 @@ export default function Chat({ chatType, chatId }) {
               }}>
                 <ListItemText
                   primary={message.text}
-                  secondary={`${message.authorName} - ${message.timestamp?.toLocaleTimeString()}`}
+                  secondary={`${message.authorName === activeUser.displayName ? " Du" : message.authorName} - ${message.timestamp?.toLocaleTimeString()}`}
                   secondaryTypographyProps={{ fontSize: '0.75rem' }}
                 />
               </Paper>
