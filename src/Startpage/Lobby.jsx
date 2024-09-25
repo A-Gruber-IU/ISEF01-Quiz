@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
-import { ref as databaseRef, onValue, set, onDisconnect, push, get, remove } from 'firebase/database';
+import { ref as databaseRef, onValue, set, push, get, remove } from 'firebase/database';
 import { NavLink, useNavigate } from 'react-router-dom';
 
-import { List, ListItem, ListItemText, CircularProgress, Button, Chip, Box, Paper, Stack, IconButton, Typography, Card, CardHeader, CardContent } from '@mui/material';
+import { List, ListItem, ListItemText, CircularProgress, Button, Chip, Box, Paper, Stack, IconButton, Typography, Card, CardContent } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import "../Layout/styles.css";
 import Chat from '../Chat';
@@ -15,31 +15,21 @@ import QueryStatsIcon from '@mui/icons-material/QueryStats';
 import { useFirebase } from '../useFirebase';
 import { ActiveCourseDisplay } from './ActiveCourseDisplay';
 import { useActiveCourse } from '../useActiveCourse';
+import { useUserStatuses } from '../useUserStatuses';
 
 export default function Lobby() {
-
   const { auth, database, firestore } = useFirebase();
   const activeUser = auth.currentUser;
-  const { activeCourse, courseLoading, updateActiveCourse } = useActiveCourse(activeUser.uid);
-
-  function handleChangeCourse(courseId) {
-    updateActiveCourse(courseId);
-  };
-
-
-  console.log("Render.");
-
+  const { activeCourse, courseLoading, updateActiveCourse } = useActiveCourse(activeUser?.uid);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [courseId, setCourseId] = useState("");
   const navigate = useNavigate();
-  const [currentUserStatuses, setCurrentUserStatuses] = useState({
-    online: true,
-    coop: false,
-    competition: false,
-    matchingUserId: null,
-    gameId: null
-  });
+  const { currentUserStatuses, handleStatusChange } = useUserStatuses(courseId);
+
+  function handleChangeCourse(courseId) {
+    updateActiveCourse(courseId);
+  };
 
   useEffect(() => {
     if (activeCourse) {
@@ -48,37 +38,10 @@ export default function Lobby() {
   }, [activeCourse]);
 
   useEffect(() => {
-    async function initializeCurrentUserStatuses() {
-      if (courseId && activeUser) {
-        const userStatusRef = databaseRef(database, `lobbies/${courseId}/${activeUser.uid}`);
-        const userStatusSnapshot = await get(userStatusRef);
-        const userStatusVal = userStatusSnapshot.val();
-        if (userStatusVal) {
-          setCurrentUserStatuses(userStatusVal);
-        }
-      }
-    }
-    initializeCurrentUserStatuses();
-  }, [activeUser, courseId, database]);
-
-  useEffect(() => {
-    console.log("useEffect Hook triggered for connection status and user data.");
+    console.log("useEffect Hook triggered for user data.");
     if (!activeUser || !courseId) return;
 
     const lobbyRef = databaseRef(database, `lobbies/${courseId}`);
-    const connectedRef = databaseRef(database, '.info/connected');
-
-    const checkConnectionStatus = onValue(connectedRef, (snap) => {
-      if (snap.val() === true) {
-        const userStatusRef = databaseRef(database, `lobbies/${courseId}/${activeUser.uid}`);
-
-        // Set the user as online when connected
-        set(userStatusRef, { ...currentUserStatuses, online: true });
-
-        // Remove the user when disconnected
-        onDisconnect(userStatusRef).remove();
-      }
-    });
 
     const getAllUsersData = onValue(lobbyRef, async (snapshot) => {
       console.log("getAllUsersData triggered.");
@@ -108,22 +71,21 @@ export default function Lobby() {
           ((user.statuses["coop"] && currentUserStatuses.coop) || (user.statuses["competition"] && currentUserStatuses.competition)) &&
           user.statuses["matching_user_id"] == activeUser.uid
         );
-
         if (matchingUser) {
+          console.log("It's a match. Matching user: ", matchingUser);
           try {
             await enterGameLobby(matchingUser);
           } catch (error) {
             console.error("Failed to enter Lobby.", error.message)
           }
-
         }
       } else {
         setUsers([]);
       }
       setLoading(false);
     });
+
     return () => {
-      checkConnectionStatus();
       getAllUsersData();
     };
 
@@ -143,12 +105,10 @@ export default function Lobby() {
 
   }, [courseId, firestore, database, activeUser, currentUserStatuses, users, navigate]);
 
-
-  async function handleStatusChange(status) {
-    let newStatuses = { ...currentUserStatuses };
-    newStatuses[status] = !currentUserStatuses[status];
-    console.log("status: ", status);
-    console.log("newStatuses after initial change: ", newStatuses);
+  async function preHandleStatusChange(status) {
+    if (!activeUser || !courseId) {
+      return;
+    }
 
     let gameId = null;
 
@@ -156,12 +116,12 @@ export default function Lobby() {
     if (!currentUser) return;
 
     // Check for match with other user and set up game if there is a match
-    if (newStatuses[status]) {
-      console.log("users: ", users);
+    if (!currentUserStatuses[status]) {
+      console.log("Checking for match. users: ", users);
       const match = users.find(user =>
         user.id !== activeUser.uid && user.statuses[status]
       );
-      console.log("match: ", match);
+      console.log("Found match: ", match);
 
       if (match) {
         // Check if an old game already exists and if so, delete
@@ -172,8 +132,7 @@ export default function Lobby() {
           const existingPrivateLobby = Object.entries(privateLobbies).find(([_, lobby]) =>
             lobby.users &&
             lobby.users.includes(activeUser.uid) &&
-            lobby.users.includes(match.id) &&
-            lobby.status === status
+            lobby.users.includes(match.id)
           );
           if (existingPrivateLobby) {
             console.log("There is an existing game for these two users. Deleting.")
@@ -191,7 +150,6 @@ export default function Lobby() {
         console.log("Creating new game lobby with game-ID: ", gameId);
         console.log("Game mode: ", status);
 
-
         // Create a new private chat in firestore
         const privateChatRef = doc(firestore, `private_chats`, gameId);
         await setDoc(privateChatRef, {
@@ -200,24 +158,17 @@ export default function Lobby() {
         });
         console.log("Game-ID:", gameId);
         console.log("Matching user's ID:", match.id);
-        newStatuses["game_id"] = gameId;
-        newStatuses["matching_user_id"] = match.id;
+        let newStatuses = { ...currentUserStatuses, game_id: gameId, matching_user_id: match.id };
+        newStatuses[status] = !currentUserStatuses[status];
         const userStatusRef = databaseRef(database, `lobbies/${courseId}/${activeUser.uid}`);
         await set(userStatusRef, newStatuses);
         console.log("New Statuses in DB before navigation to game lobby:", newStatuses)
         navigate(`/${status}/${gameId}`);
       }
     }
-    if (activeUser && courseId) {
-      // Change Status of current user in database
-      const userStatusRef = databaseRef(database, `lobbies/${courseId}/${activeUser.uid}`);
-      console.log("newStatuses before Update in DB: ", newStatuses)
-      await set(userStatusRef, newStatuses);
-      const userStatusSnapshot = await get(userStatusRef);
-      const userStatusVal = userStatusSnapshot.val();
-      console.log("New Statuses in DB: ", userStatusVal);
-      setCurrentUserStatuses(userStatusVal);
-      console.log("New currentUserStatuses: ", currentUserStatuses);
+    if (activeUser && courseId && gameId == null) {
+      //  Change Status of current user in database if there was no match
+      handleStatusChange(status);
     }
   }
 
@@ -225,11 +176,10 @@ export default function Lobby() {
     return <CircularProgress />;
   }
 
-
   return (
     <>
-      <Grid container marginBottom={3} spacing={2} size={{ xs: 12, md: 8, lg: 7, xl: 6 }}>
-        <Grid size={{ xs: 12, md: 6 }}>
+      <Grid container marginBottom={3} spacing={2} size={{ xs: 12 }}>
+        <Grid size={{ xs: 12, md: 6, lg: 3 }}>
           <NavLink className="navlink" to={"single"}>
             <Paper elevation={8} sx={{ py: 2, px: 2, textAlign: "center" }}>
               <Box>
@@ -246,7 +196,7 @@ export default function Lobby() {
             </Paper>
           </NavLink>
         </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 6, lg: 3 }}>
           <NavLink className="navlink" to={"dashboard"}>
             <Paper elevation={8} sx={{ py: 2, px: 2, textAlign: "center" }}>
               <Box>
@@ -263,14 +213,14 @@ export default function Lobby() {
             </Paper>
           </NavLink>
         </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Paper elevation={8} sx={{ py: 2, px: 2, textAlign: "center", backgroundColor: currentUserStatuses.coop ? "#55FF4D" : "" }} onClick={() => handleStatusChange("coop")}>
+        <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+          <Paper elevation={8} sx={{ py: 2, px: 2, textAlign: "center", backgroundColor: currentUserStatuses.coop ? "#55FF4D" : "" }} onClick={() => preHandleStatusChange("coop")}>
             <Box>
               <Stack sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <IconButton aria-label="Coop-Modus" onClick={() => handleStatusChange("coop")}>
+                <IconButton aria-label="Coop-Modus" onClick={() => preHandleStatusChange("coop")}>
                   <Diversity3Icon fontSize='large' />
                 </IconButton>
-                <Button color='plainBlack' variant='text' onClick={() => handleStatusChange("coop")}>
+                <Button color='plainBlack' variant='text' onClick={() => preHandleStatusChange("coop")}>
                   Coop-Modus
                 </Button>
                 {currentUserStatuses.coop ? <p className='smallDenseText' > Suche Mitspieler!</p> : <p className='smallDenseText'>Testet euer Wissen gemeinsam!</p>}
@@ -278,14 +228,14 @@ export default function Lobby() {
             </Box>
           </Paper>
         </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Paper elevation={8} sx={{ py: 2, px: 2, textAlign: "center", backgroundColor: currentUserStatuses.competition ? "#55FF4D" : "" }} onClick={() => handleStatusChange("competition")}>
+        <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+          <Paper elevation={8} sx={{ py: 2, px: 2, textAlign: "center", backgroundColor: currentUserStatuses.competition ? "#55FF4D" : "" }} onClick={() => preHandleStatusChange("competition")}>
             <Box>
               <Stack sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <IconButton aria-label="Competition-Modus" onClick={() => handleStatusChange("competition")}>
+                <IconButton aria-label="Competition-Modus" onClick={() => preHandleStatusChange("competition")}>
                   <EmojiEventsIcon fontSize='large' />
                 </IconButton>
-                <Button color='plainBlack' variant='text' onClick={() => handleStatusChange("competition")}>
+                <Button color='plainBlack' variant='text' onClick={() => preHandleStatusChange("competition")}>
                   Competition-Modus
                 </Button>
                 {currentUserStatuses.competition ? <p className='smallDenseText' >Suche Gegenspieler!</p> : <p className='smallDenseText'>Messe dich mit anderen!</p>}
@@ -307,8 +257,8 @@ export default function Lobby() {
           <Chat chatType="lobby_chats" chatId={courseId} />
         </Grid>
         <Card sx={{ marginBottom: 3, width: "13rem" }}>
-          <CardContent marginLeft={2} marginTop={2}>
-            <Typography variant="subtitle2" component="subtitle2" className='normHeadline' gutterBottom>
+          <CardContent>
+            <Typography variant="subtitle2" className='normHeadline' gutterBottom>
               WER IST ONLINE?
             </Typography>
             <List>

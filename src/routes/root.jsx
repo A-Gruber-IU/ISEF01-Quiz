@@ -9,10 +9,12 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 import { connectAuthEmulator, signOut } from "firebase/auth";
 import { connectFirestoreEmulator, getDoc, doc } from "firebase/firestore";
-import { connectDatabaseEmulator, ref as databaseRef, remove } from "firebase/database";
+import { connectDatabaseEmulator, ref as databaseRef, remove, onDisconnect, get } from "firebase/database";
 import { connectStorageEmulator } from 'firebase/storage';
 
 import { useFirebase } from '../useFirebase';
+import { useUserStatuses } from '../useUserStatuses';
+import { useActiveCourse } from '../useActiveCourse';
 
 const iuTheme = createTheme({
     palette: {
@@ -46,6 +48,8 @@ export default function Root() {
     const [activeUser, setActiveUser] = useState(null);
     const navigation = useNavigation();
     const { auth, app, firestore, database, storage } = useFirebase();
+    const { activeCourse } = useActiveCourse(activeUser?.uid);
+    const { currentUserStatuses } = useUserStatuses(activeCourse?.id);
 
     useEffect(() => {
         if (isDevelopment) {
@@ -61,6 +65,45 @@ export default function Root() {
             });
         }
     }, [app, auth]);
+
+    useEffect(() => {
+        if (activeUser && activeCourse) {
+            const userStatusRef = databaseRef(database, `lobbies/${activeCourse.id}/${activeUser.uid}`);
+
+            // Set up onDisconnect
+            onDisconnect(userStatusRef).remove();
+
+            // If the user has an active game, set up onDisconnect for that as well
+            if (currentUserStatuses.gameId) {
+                const gameRef = databaseRef(database, `private_lobbies/${currentUserStatuses.gameId}`);
+                
+                onDisconnect(gameRef).update({
+                    onlyOneUserLeft: true
+                }).then(() => {
+                    // After setting onlyOneUserLeft to true, check if it was already true
+                    return get(gameRef);
+                }).then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const gameData = snapshot.val();
+                        if (gameData.onlyOneUserLeft) {
+                            // If onlyOneUserLeft was already true, remove the entire game
+                            return remove(gameRef);
+                        }
+                    }
+                }).catch((error) => {
+                    console.error("Error in onDisconnect setup:", error);
+                });
+            }
+
+            return () => {
+                // Clear the onDisconnect operations when the component unmounts
+                onDisconnect(userStatusRef).cancel();
+                if (currentUserStatuses.gameId) {
+                    onDisconnect(databaseRef(database, `private_lobbies/${currentUserStatuses.gameId}`)).cancel();
+                }
+            };
+        }
+    }, [activeUser, activeCourse, database, currentUserStatuses.gameId]);
 
     useEffect(() => {
         console.log("New activeUser:", activeUser);
@@ -88,6 +131,8 @@ export default function Root() {
     }, [auth, database, firestore]);
 
     if (activeUser) {
+
+        
         return (
             <ThemeProvider theme={iuTheme}>
                 <TopNav onLogout={handleLogout} />

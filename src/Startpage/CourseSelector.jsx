@@ -88,7 +88,7 @@ export function CourseSelector({ activeCourse, handleChangeCourse }) {
         <DialogTitle>Wähle einen Kurs</DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={3} sx={{ padding: 2 }}>
-            {coursesData.map((course) => (
+            {(coursesData && coursesData.length > 0) ? coursesData.map((course) => (
               <Grid size={{ xs: 12, sm: 6, md: 4 }} key={course.id}>
                 <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                   <CardMedia
@@ -109,15 +109,14 @@ export function CourseSelector({ activeCourse, handleChangeCourse }) {
                     onClick={() => handleSelectCourse(course.id)}
                     variant="contained"
                     color="primary"
-                    fullWidth
-                    disabled={course.id === activeCourse.id}
-                    sx={{ mt: 'auto', mb: 2, mx: 2 }}
+                    disabled={activeCourse ? course.id === activeCourse.id : false}
+                    sx={{ mt: 'auto', mb: 2, mx: 4 }}
                   >
                     Auswählen
                   </Button>
                 </Card>
               </Grid>
-            ))}
+            )) : <></>}
           </Grid>
         </DialogContent>
       </Dialog>

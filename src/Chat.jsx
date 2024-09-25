@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { collection, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp, getDoc, doc, setDoc } from 'firebase/firestore';
+import { collection, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp, getDoc, doc } from 'firebase/firestore';
 import { useFirebase } from './useFirebase';
-import { Box, TextField, Button, List, ListItem, ListItemText, Typography, Paper, Snackbar } from '@mui/material';
+import { Box, TextField, Button, List, ListItem, ListItemText, Paper, Snackbar } from '@mui/material';
 
 export default function Chat({ chatType, chatId }) {
   const [messages, setMessages] = useState([]);

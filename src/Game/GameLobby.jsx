@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ref as databaseRef, onValue, remove, get, set } from 'firebase/database';
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useBeforeUnload } from 'react-router-dom';
+import { ref as databaseRef, onValue, get } from 'firebase/database';
 import { doc, getDoc } from 'firebase/firestore';
 import { Box, Typography, Button, Alert, CircularProgress } from '@mui/material';
 import { useFirebase } from '../useFirebase';
 import PrivateChat from './PrivateChat';
 import { useActiveCourse } from '../useActiveCourse';
+import { useUserStatuses } from '../useUserStatuses';
 
 export default function GameLobby({ gameType, gameId }) {
   const navigate = useNavigate();
@@ -17,15 +18,13 @@ export default function GameLobby({ gameType, gameId }) {
   const [error, setError] = useState(null);
   const activeUser = auth.currentUser;
 
-  const { activeCourse } = useActiveCourse(activeUser.uid);
-
-  // TODO
-  // Erase data from realtime database public lobby when entering private game lobby after other user has entered
+  const { activeCourse } = useActiveCourse(activeUser?.uid);
+  const { exitPrivateLobby } = useUserStatuses(activeCourse?.id);
 
   useEffect(() => {
     const gameRef = databaseRef(database, `private_lobbies/${gameId}`);
 
-    const fetchInitialData = async () => {
+    async function fetchInitialData() {
       try {
         const snapshot = await get(gameRef);
         if (snapshot.exists()) {
@@ -59,8 +58,11 @@ export default function GameLobby({ gameType, gameId }) {
       if (snapshot.exists()) {
         const data = snapshot.val();
         setGameData(data);
+        if (data.onlyOneUserLeft) {
+          setAlert("Der andere Spieler hat das Spiel verlassen.");
+        }
       } else {
-        setAlert("Der andere Spieler hat das Spiel verlassen.");
+        setAlert("Das Spiel wurde beendet.");
         setTimeout(() => navigate('/'), 20000);
       }
     }, (err) => {
@@ -68,27 +70,23 @@ export default function GameLobby({ gameType, gameId }) {
       setError("Fehler beim Aktualisieren des Spielstatus.");
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      // Remove exitPrivateLobby from here
+    };
   }, [gameId, database, firestore, auth, navigate]);
 
-  const handleExit = async () => {
+  const handleExit = useCallback(async () => {
     try {
-      await remove(databaseRef(database, `private_lobbies/${gameId}`));
-      const userStatusRef = databaseRef(database, `lobbies/${activeCourse.id}/${activeUser.uid}`);
-      const defaultStatuses = {
-        online: true,
-        coop: false,
-        competition: false,
-        matchingUserId: null,
-        gameId: null
-      };
-      await set(userStatusRef, defaultStatuses);
+      await exitPrivateLobby(gameId);
       navigate('/');
     } catch (err) {
       console.error("Error exiting game:", err);
       setError("Fehler beim Verlassen des Spiels.");
     }
-  };
+  }, [exitPrivateLobby, gameId, navigate]);
+
+  useBeforeUnload(handleExit);
 
   if (loading) {
     return <CircularProgress />;
