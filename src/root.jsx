@@ -69,7 +69,6 @@ export default function Root() {
     useEffect(() => {
         if (activeUser && activeCourse) {
             const userStatusRef = databaseRef(database, `lobbies/${activeCourse.id}/${activeUser.uid}`);
-
             onDisconnect(userStatusRef).remove();
 
             // If the user has an active game, set up onDisconnect for that as well
