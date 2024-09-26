@@ -16,7 +16,6 @@ export function useUserStatuses(courseId) {
   const [currentUserStatuses, setCurrentUserStatuses] = useState(defaultStatuses);
 
   const exitPrivateLobby = useCallback((privateLobbyId) => {
-    console.log("XXX exitPrivateLobby called XX")
     if (!privateLobbyId) return;
 
     // Remove private lobby
