@@ -1,24 +1,25 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
 
-import '@fontsource/roboto/300.css';
-import '@fontsource/roboto/400.css';
-import '@fontsource/roboto/500.css';
-import '@fontsource/roboto/700.css';
+import "@fontsource/roboto/300.css";
+import "@fontsource/roboto/400.css";
+import "@fontsource/roboto/500.css";
+import "@fontsource/roboto/700.css";
 
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
-import Root from './root.jsx';
-import ErrorPage from './errorPage.jsx';
-import SingleGame from './Game/SingleGame.jsx';
-import CoopRoute from './Game/CoopRoute.jsx';
-import CompetitionRoute from './Game/CompetitionRoute.jsx';
-import Profile from './User/Profile.jsx';
-import Dashboard from './Dashboard.jsx';
-import Index from './Startpage/index.jsx';
-import Impressum from './Info/Impressum.jsx';
-import Datenschutz from './Info/Datenschutz.jsx';
-import Faqs from './Info/Faqs.jsx';
+import Root from "./root.jsx";
+import ErrorPage from "./errorPage.jsx";
+import SingleGame from "./Game/SingleGame.jsx";
+import CoopRoute from "./Game/CoopRoute.jsx";
+import CompetitionRoute from "./Game/CompetitionRoute.jsx";
+import Profile from "./User/Profile.jsx";
+import Dashboard from "./Dashboard.jsx";
+import Index from "./Startpage/index.jsx";
+import Impressum from "./Info/Impressum.jsx";
+import Datenschutz from "./Info/Datenschutz.jsx";
+import Faqs from "./Info/Faqs.jsx";
+import SubmitQuestion from "./SubmitQuestion/SubmitQuestion.jsx";
 
 const router = createBrowserRouter([
   {
@@ -48,6 +49,10 @@ const router = createBrowserRouter([
         element: <Profile />,
       },
       {
+        path: "submitquestion",
+        element: <SubmitQuestion />,
+      },
+      {
         path: "impressum",
         element: <Impressum />,
       },
@@ -63,8 +68,8 @@ const router = createBrowserRouter([
   },
 ]);
 
-createRoot(document.getElementById('root')).render(
+createRoot(document.getElementById("root")).render(
   <StrictMode>
     <RouterProvider router={router} />
-  </StrictMode>,
-)
+  </StrictMode>
+);

@@ -1,19 +1,20 @@
-import { useMemo } from 'react';
-import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-import { getDatabase } from 'firebase/database';
-import { getStorage } from 'firebase/storage';
-import { getAuth } from 'firebase/auth';
+import { useMemo } from "react";
+import { initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
+import { getDatabase } from "firebase/database";
+import { getStorage } from "firebase/storage";
+import { getAuth } from "firebase/auth";
 
 // Firebase SDK configuration object
 const firebaseConfig = {
   apiKey: "AIzaSyBevweMy2v48Meun9s80B6GTLjom8Ao-J4",
   authDomain: "iu-quizapp.firebaseapp.com",
-  databaseURL: "https://iu-quizapp-default-rtdb.europe-west1.firebasedatabase.app",
+  databaseURL:
+    "https://iu-quizapp-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "iu-quizapp",
   storageBucket: "iu-quizapp.appspot.com",
   messagingSenderId: "1086779168474",
-  appId: "1:1086779168474:web:ede6332a4022776237f7e3"
+  appId: "1:1086779168474:web:ede6332a4022776237f7e3",
 };
 
 export function useFirebase() {
