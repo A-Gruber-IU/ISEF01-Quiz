@@ -8,9 +8,9 @@ import '@fontsource/roboto/700.css';
 
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
-import Root from './routes/root.jsx';
+import Root from './root.jsx';
 import ErrorPage from './errorPage.jsx';
-import SinglePlay from './Game/SinglePlay.jsx';
+import SingleGame from './Game/SingleGame.jsx';
 import CoopRoute from './Game/CoopRoute.jsx';
 import CompetitionRoute from './Game/CompetitionRoute.jsx';
 import Profile from './User/Profile.jsx';
@@ -33,7 +33,7 @@ const router = createBrowserRouter([
       },
       {
         path: "single",
-        element: <SinglePlay />,
+        element: <SingleGame />,
       },
       {
         path: "coop/:gameId",

@@ -2,11 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useBeforeUnload } from 'react-router-dom';
 import { ref as databaseRef, onValue, get } from 'firebase/database';
 import { doc, getDoc } from 'firebase/firestore';
-import { Box, Typography, Button, Alert, CircularProgress } from '@mui/material';
+import { Box, Typography, Button, Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { useFirebase } from '../useFirebase';
 import PrivateChat from './PrivateChat';
-import { useActiveCourse } from '../useActiveCourse';
-import { useUserStatuses } from '../useUserStatuses';
+import { useActiveCourse } from '../User/useActiveCourse';
+import { useUserStatuses } from '../User/useUserStatuses';
 
 export default function GameLobby({ gameType, gameId }) {
   const navigate = useNavigate();
@@ -16,6 +16,7 @@ export default function GameLobby({ gameType, gameId }) {
   const [alert, setAlert] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isExitDialogOpen, setIsExitDialogOpen] = useState(false);
   const activeUser = auth.currentUser;
 
   const { activeCourse } = useActiveCourse(activeUser?.uid);
@@ -42,7 +43,6 @@ export default function GameLobby({ gameType, gameId }) {
           }
         } else {
           setAlert("Das Spiel existiert nicht mehr.");
-          setTimeout(() => navigate('/'), 20000);
         }
       } catch (err) {
         console.error("Error fetching initial game data:", err);
@@ -58,12 +58,8 @@ export default function GameLobby({ gameType, gameId }) {
       if (snapshot.exists()) {
         const data = snapshot.val();
         setGameData(data);
-        if (data.onlyOneUserLeft) {
-          setAlert("Der andere Spieler hat das Spiel verlassen.");
-        }
       } else {
-        setAlert("Das Spiel wurde beendet.");
-        setTimeout(() => navigate('/'), 20000);
+        setAlert("Der andere Spieler hat das Spiel beendet.");
       }
     }, (err) => {
       console.error("Error setting up game listener:", err);
@@ -72,13 +68,12 @@ export default function GameLobby({ gameType, gameId }) {
 
     return () => {
       unsubscribe();
-      // Remove exitPrivateLobby from here
     };
   }, [gameId, database, firestore, auth, navigate]);
 
   const handleExit = useCallback(async () => {
     try {
-      await exitPrivateLobby(gameId);
+      exitPrivateLobby(gameId);
       navigate('/');
     } catch (err) {
       console.error("Error exiting game:", err);
@@ -86,7 +81,26 @@ export default function GameLobby({ gameType, gameId }) {
     }
   }, [exitPrivateLobby, gameId, navigate]);
 
-  useBeforeUnload(handleExit);
+  const openExitDialog = useCallback(() => {
+    setIsExitDialogOpen(true);
+  }, []);
+
+  const closeExitDialog = useCallback(() => {
+    setIsExitDialogOpen(false);
+  }, []);
+
+  const confirmExit = useCallback(() => {
+    closeExitDialog();
+    handleExit();
+  }, [closeExitDialog, handleExit]);
+
+  useBeforeUnload(
+    useCallback((event) => {
+        event.preventDefault();
+        setIsExitDialogOpen(true);
+    }, [])
+  );
+
 
   if (loading) {
     return <CircularProgress />;
@@ -121,9 +135,30 @@ export default function GameLobby({ gameType, gameId }) {
         {gameType === "coop" ? "Coop-Spiel mit" : "Competition gegen"} {otherUser.display_name}
       </Typography>
       <PrivateChat chatId={gameId} />
-      <Button sx={{ mt: 2 }} variant="contained" color="secondary" onClick={handleExit}>
+      <Button sx={{ mt: 2 }} variant="contained" color="secondary" onClick={openExitDialog}>
         Spiel verlassen
       </Button>
+      <Dialog
+        open={isExitDialogOpen}
+        onClose={closeExitDialog}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          {"Spiel verlassen?"}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Bist du sicher, dass du das Spiel verlassen möchtest? Dies beendet das Spiel für beide Spieler.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button color='secondary' onClick={closeExitDialog}>Abbrechen</Button>
+          <Button color='warning' onClick={confirmExit} autoFocus>
+            Verlassen
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

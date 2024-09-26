@@ -1,4 +1,4 @@
-import { useActiveCourse } from "./useActiveCourse";
+import { useActiveCourse } from "./User/useActiveCourse";
 import { useFirebase } from "./useFirebase";
 import { ActiveCourseDisplay } from "./Startpage/ActiveCourseDisplay";
 

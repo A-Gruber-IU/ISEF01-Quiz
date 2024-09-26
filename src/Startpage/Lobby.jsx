@@ -14,8 +14,8 @@ import QueryStatsIcon from '@mui/icons-material/QueryStats';
 
 import { useFirebase } from '../useFirebase';
 import { ActiveCourseDisplay } from './ActiveCourseDisplay';
-import { useActiveCourse } from '../useActiveCourse';
-import { useUserStatuses } from '../useUserStatuses';
+import { useActiveCourse } from '../User/useActiveCourse';
+import { useUserStatuses } from '../User/useUserStatuses';
 
 export default function Lobby() {
   const { auth, database, firestore } = useFirebase();
@@ -99,6 +99,9 @@ export default function Lobby() {
       console.log("gameVal", gameVal)
       const gameMode = gameVal.gameMode;
       console.log("Game Mode: ", gameMode)
+      let newStatuses = { ...currentUserStatuses, game_id: gameId, matching_user_id: matchingUser.id };
+      const userStatusRef = databaseRef(database, `lobbies/${courseId}/${activeUser.uid}`);
+      await set(userStatusRef, newStatuses);
       // Navigate to the private lobby
       navigate(`/${gameMode}/${gameId}`);
     }
@@ -168,7 +171,9 @@ export default function Lobby() {
     }
     if (activeUser && courseId && gameId == null) {
       //  Change Status of current user in database if there was no match
-      handleStatusChange(status);
+      let newStatuses = { ...currentUserStatuses };
+      newStatuses[status] = !currentUserStatuses[status];
+      handleStatusChange(newStatuses);
     }
   }
 
