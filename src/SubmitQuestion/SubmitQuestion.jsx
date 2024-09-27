@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 
 import { useFirebase } from "../useFirebase";
-import { addDoc, collection, doc, getDocs } from "firebase/firestore";
+import { addDoc, collection, doc, getDoc, getDocs } from "firebase/firestore";
 
 const SubmitQuestion = () => {
   const [question, setQuestion] = useState("");
@@ -38,7 +38,7 @@ const SubmitQuestion = () => {
         console.log(selectedCourse);
         const coursesRef = doc(firestore, "courses", selectedCourse);
         const questionRef = collection(coursesRef, "questions");
-        const questionDoc = await addDoc(questionRef, {
+        await addDoc(questionRef, {
           authorId: userID,
           reviewed: false,
           question_text: question,
@@ -62,22 +62,27 @@ const SubmitQuestion = () => {
     }
   };
 
-  const fetchCourses = async () => {
-    const coursesRef = collection(firestore, "courses");
-    const coursesDoc = await getDocs(coursesRef);
-    if (!coursesDoc.empty) {
+  useEffect(() => {
+    const fetchCourses = async () => {
+      const userDoc = await getDoc(doc(firestore, 'users', userID));
+      const userData = userDoc.data();
+      const userCourses = userData.courses;
       const myCourses = [];
-      for (const course of coursesDoc.docs) {
-        myCourses.push({ ...course.data(), id: course.id });
+      if (userCourses?.length > 0) {
+        for (const userCourseId of userCourses) {
+          const courseDoc = await getDoc(doc(firestore, 'courses', userCourseId));
+          const courseData = courseDoc.data();
+          if (courseData) {
+            myCourses.push({ ...courseData, id: userCourseId });
+          }
+        }
       }
       setCourses(myCourses);
       console.log(myCourses);
-    }
-  };
+    };
 
-  useEffect(() => {
     fetchCourses();
-  }, [firestore]);
+  }, [setCourses, firestore, userID]);
 
   return (
     <div className="container">
@@ -97,7 +102,7 @@ const SubmitQuestion = () => {
         <TextField
           sx={{ marginBottom: 2 }}
           required
-          label="Enter a question"
+          label="Deine Frage"
           variant="outlined"
           value={question}
           onChange={(e) => {
@@ -106,7 +111,7 @@ const SubmitQuestion = () => {
         />
         <TextField
           sx={{ marginBottom: 2 }}
-          label="Answer A"
+          label="Antwort A"
           variant="outlined"
           required
           value={answerA}
@@ -117,7 +122,7 @@ const SubmitQuestion = () => {
         <TextField
           sx={{ marginBottom: 2 }}
           required
-          label="Answer B"
+          label="Antwort B"
           variant="outlined"
           value={answerB}
           onChange={(e) => {
@@ -127,7 +132,7 @@ const SubmitQuestion = () => {
         <TextField
           sx={{ marginBottom: 2 }}
           required
-          label="Answer C"
+          label="Antwort C"
           variant="outlined"
           value={answerC}
           onChange={(e) => {
@@ -137,7 +142,7 @@ const SubmitQuestion = () => {
         <TextField
           sx={{ marginBottom: 2 }}
           required
-          label="Answer D"
+          label="Antwort D"
           variant="outlined"
           value={answerD}
           onChange={(e) => {
@@ -166,12 +171,12 @@ const SubmitQuestion = () => {
         </FormControl>
 
         <FormControl required fullWidth sx={{ marginBottom: 2 }}>
-          <InputLabel>Option wählen</InputLabel>
+          <InputLabel>Richtige Antwort</InputLabel>
           <Select
             labelId="correctAnswer"
             id="correctAnswer"
             value={correctAnswer}
-            label="Wähle die richtige Antwort"
+            label="Richtige Antwort"
             onChange={(e) => setCorrectAnswer(e.target.value)}
           >
             <MenuItem value={"A"}>Antwort A</MenuItem>
