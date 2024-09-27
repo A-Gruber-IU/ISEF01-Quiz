@@ -12,13 +12,13 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 import QueryStatsIcon from '@mui/icons-material/QueryStats';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import HomeIcon from '@mui/icons-material/Home';
 import LogoutIcon from '@mui/icons-material/Logout';
+import LibraryAddIcon from '@mui/icons-material/LibraryAdd';
 
 export default function MenuDrawer({ onLogout }) {
   const [open, setOpen] = useState(false);
@@ -77,6 +77,21 @@ export default function MenuDrawer({ onLogout }) {
                 <HelpOutlineIcon />
               </ListItemIcon>
               <ListItemText primary={"FAQ"} />
+            </ListItemButton>
+          </NavLink>
+        </ListItem>
+        <ListItem disablePadding>
+          <NavLink
+            to={`submitquestion`}
+            className={({ isActive, isPending }) =>
+              isActive ? "active" : isPending ? "pending" : ""
+            }
+          >
+            <ListItemButton>
+              <ListItemIcon>
+                <LibraryAddIcon />
+              </ListItemIcon>
+              <ListItemText primary={"Frage einreichen"} />
             </ListItemButton>
           </NavLink>
         </ListItem>
