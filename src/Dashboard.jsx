@@ -11,9 +11,7 @@ import "./Layout/styles.css";
 export default function Dashboard() {
   const { auth } = useFirebase();
   const activeUser = auth.currentUser;
-  const { activeCourse, loading, updateActiveCourse } = useActiveCourse(
-    activeUser.uid
-  );
+  const { activeCourse, loading, updateActiveCourse } = useActiveCourse();
 
   function handleChangeCourse(courseId) {
     updateActiveCourse(courseId);

@@ -20,6 +20,7 @@ import Impressum from "./Info/Impressum.jsx";
 import Datenschutz from "./Info/Datenschutz.jsx";
 import Faqs from "./Info/Faqs.jsx";
 import SubmitQuestion from "./SubmitQuestion/SubmitQuestion.jsx";
+import Results from "./Game/Results.jsx";
 
 const router = createBrowserRouter([
   {
@@ -43,6 +44,10 @@ const router = createBrowserRouter([
       {
         path: "competition/:gameId",
         element: <CompetitionRoute />,
+      },
+      {
+        path: "results/:gameId",
+        element: <Results />,
       },
       {
         path: "profile",

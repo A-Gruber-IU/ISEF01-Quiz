@@ -17,24 +17,46 @@ import { useUserStatuses } from './User/useUserStatuses';
 import { useActiveCourse } from './User/useActiveCourse';
 
 const iuTheme = createTheme({
-    palette: {
-        primary: {
-            light: '#f2f0f1',
-            main: '#efedee',
-            dark: '#a7a5a6',
-            contrastText: '#000',
-        },
-        secondary: {
-            light: '#5f8eff',
-            main: '#3772ff',
-            dark: '#264fb2',
-            contrastText: '#fff',
-        },
-        darkGrey: {
-            main: '#00000099'
-        },
-        plainBlack: {
-            main: '#010101',
+    colorSchemes: {
+        light: {
+            palette: {
+                primary: {
+                    light: '#f2f0f1',
+                    main: '#efedee',
+                    dark: '#a7a5a6',
+                    contrastText: '#000',
+                },
+                secondary: {
+                    light: '#5f8eff',
+                    main: '#3772ff',
+                    dark: '#264fb2',
+                    contrastText: '#fff',
+                },
+                darkGrey: {
+                    main: '#545454',
+                    light: '#545454',
+                    dark: '#545454',
+                    contrastText: '#fff',
+                },
+                plainBlack: {
+                    main: '#010101',
+                    light: '#010101',
+                    dark: '#010101',
+                    contrastText: '#fff',
+                },
+                ochre: {
+                    main: '#E3D026',
+                    light: '#E9DB5D',
+                    dark: '#A29415',
+                    contrastText: '#242105',
+                },
+                lightGreen: {
+                    main: '#8bc34a',
+                    light: '#a2cf6e',
+                    dark: '#618833',
+                    contrastText: '#000',
+                },
+            },
         },
     },
 });
@@ -48,8 +70,8 @@ export default function Root() {
     const [activeUser, setActiveUser] = useState(null);
     const navigation = useNavigation();
     const { auth, app, firestore, database, storage } = useFirebase();
-    const { activeCourse } = useActiveCourse(activeUser?.uid);
-    const { currentUserStatuses } = useUserStatuses(activeCourse?.id);
+    const { activeCourse } = useActiveCourse();
+    const { currentUserStatuses } = useUserStatuses();
 
     useEffect(() => {
         if (isDevelopment) {
@@ -111,11 +133,11 @@ export default function Root() {
             console.error("Error signing out: ", error);
         }
     }, [auth, database, firestore]);
-    
+
 
     if (activeUser) {
 
-        
+
         return (
             <ThemeProvider theme={iuTheme}>
                 <TopNav onLogout={handleLogout} />

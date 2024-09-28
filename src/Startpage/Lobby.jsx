@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
-import { ref as databaseRef, onValue, set, push, get, remove } from 'firebase/database';
+import { addDoc, collection, doc, getDoc, getDocs, serverTimestamp as serverTimestampFS, setDoc } from 'firebase/firestore';
+import { ref as databaseRef, onValue, set, push, get, remove, serverTimestamp as serverTimestampDB } from 'firebase/database';
 import { NavLink, useNavigate } from 'react-router-dom';
 
 import { List, ListItem, ListItemText, CircularProgress, Button, Chip, Box, Paper, Stack, IconButton, Typography, Card, CardContent } from '@mui/material';
@@ -17,15 +17,31 @@ import { ActiveCourseDisplay } from './ActiveCourseDisplay';
 import { useActiveCourse } from '../User/useActiveCourse';
 import { useUserStatuses } from '../User/useUserStatuses';
 
+import { styled } from '@mui/material/styles';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+
 export default function Lobby() {
   const { auth, database, firestore } = useFirebase();
   const activeUser = auth.currentUser;
-  const { activeCourse, courseLoading, updateActiveCourse } = useActiveCourse(activeUser?.uid);
+  const { activeCourse, courseLoading, updateActiveCourse } = useActiveCourse();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [courseId, setCourseId] = useState("");
   const navigate = useNavigate();
   const { currentUserStatuses, handleStatusChange } = useUserStatuses(courseId);
+
+  const VisuallyHiddenInput = styled('input')({
+    clip: 'rect(0 0 0 0)',
+    clipPath: 'inset(50%)',
+    height: 1,
+    overflow: 'hidden',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    whiteSpace: 'nowrap',
+    width: 1,
+  });
+
 
   function handleChangeCourse(courseId) {
     updateActiveCourse(courseId);
@@ -52,7 +68,7 @@ export default function Lobby() {
         const userPromises = userIds.map(async (userId) => {
           const userDoc = await getDoc(doc(firestore, 'users', userId));
           return {
-            id: userId,
+            uid: userId,
             name: userDoc.data()?.display_name,
             statuses: lobbyData[userId]
           };
@@ -67,7 +83,7 @@ export default function Lobby() {
         });
 
         const matchingUser = users.find(user =>
-          user.id !== activeUser.uid &&
+          user.uid !== activeUser.uid &&
           ((user.statuses["coop"] && currentUserStatuses.coop) || (user.statuses["competition"] && currentUserStatuses.competition)) &&
           user.statuses["matching_user_id"] == activeUser.uid
         );
@@ -97,9 +113,9 @@ export default function Lobby() {
       const gameSnapshot = await get(gameRef);
       const gameVal = gameSnapshot.val();
       console.log("gameVal", gameVal)
-      const gameMode = gameVal.gameMode;
+      const gameMode = gameVal.game_mode;
       console.log("Game Mode: ", gameMode)
-      let newStatuses = { ...currentUserStatuses, game_id: gameId, matching_user_id: matchingUser.id };
+      let newStatuses = { ...currentUserStatuses, game_id: gameId, matching_user_id: matchingUser.uid };
       const userStatusRef = databaseRef(database, `lobbies/${courseId}/${activeUser.uid}`);
       await set(userStatusRef, newStatuses);
       // Navigate to the private lobby
@@ -115,14 +131,14 @@ export default function Lobby() {
 
     let gameId = null;
 
-    const currentUser = users.find(user => user.id === activeUser.uid);
+    const currentUser = users.find(user => user.uid === activeUser.uid);
     if (!currentUser) return;
 
     // Check for match with other user and set up game if there is a match
     if (!currentUserStatuses[status]) {
       console.log("Checking for match. users: ", users);
       const match = users.find(user =>
-        user.id !== activeUser.uid && user.statuses[status]
+        user.uid !== activeUser.uid && user.statuses[status]
       );
       console.log("Found match: ", match);
 
@@ -133,9 +149,8 @@ export default function Lobby() {
         if (privateLobbiesSnapshot.exists()) {
           const privateLobbies = privateLobbiesSnapshot.val();
           const existingPrivateLobby = Object.entries(privateLobbies).find(([_, lobby]) =>
-            lobby.users &&
-            lobby.users.includes(activeUser.uid) &&
-            lobby.users.includes(match.id)
+            (lobby.user1 == activeUser.uid && lobby.user2 == match.uid) ||
+            (lobby.user2 == activeUser.uid && lobby.user1 == match.uid)
           );
           if (existingPrivateLobby) {
             console.log("There is an existing game for these two users. Deleting.")
@@ -146,8 +161,11 @@ export default function Lobby() {
         // Create a new private lobby in realtime database
         const privateLobbyRef = databaseRef(database, `private_lobbies`);
         const newPrivateLobbyRef = push(privateLobbyRef, {
-          users: [activeUser.uid, match.id],
-          gameMode: status
+          user1: activeUser.uid,
+          user2: match.uid,
+          game_mode: status,
+          course_id: courseId,
+          created_at: serverTimestampDB(),
         });
         gameId = newPrivateLobbyRef.key;
         console.log("Creating new game lobby with game-ID: ", gameId);
@@ -156,12 +174,29 @@ export default function Lobby() {
         // Create a new private chat in firestore
         const privateChatRef = doc(firestore, `private_chats`, gameId);
         await setDoc(privateChatRef, {
-          users: [activeUser.uid, match.id],
-          createdAt: serverTimestamp()
+          users: [activeUser.uid, match.uid],
+          createdAt: serverTimestampFS()
         });
+
+        // Create a new game in firestore
+        const gameDataRef = doc(firestore, `game_data`, gameId);
+        await setDoc(gameDataRef, {
+          player1: {
+            uid: activeUser.uid,
+            name: activeUser.displayName,
+          },
+          player2: {
+            uid: match.uid,
+            name: match.name,
+          },
+          game_mode: status,
+          start_time: serverTimestampFS(),
+        });
+
+        // Update status to reflect ongoing game
         console.log("Game-ID:", gameId);
-        console.log("Matching user's ID:", match.id);
-        let newStatuses = { ...currentUserStatuses, game_id: gameId, matching_user_id: match.id };
+        console.log("Matching user's ID:", match.uid);
+        let newStatuses = { ...currentUserStatuses, game_id: gameId, matching_user_id: match.uid };
         newStatuses[status] = !currentUserStatuses[status];
         const userStatusRef = databaseRef(database, `lobbies/${courseId}/${activeUser.uid}`);
         await set(userStatusRef, newStatuses);
@@ -177,6 +212,60 @@ export default function Lobby() {
     }
   }
 
+  // function to initialize firestore database from JSON
+  async function addQuestions(courseId, questions) {
+    const questionsCollectionRef = collection(firestore, `courses/${courseId}/questions`);
+    let indices = [];
+    for (let question of questions) {
+      let newQuestionData = {
+        ...question,
+        authorId: "09AL5V15OMQwn9joaEg173C6wAo2",
+        reviewed: true,
+        reviewerID: "9aDzk0yaA9NlLjF9S1ZUZVrSyVm2"
+      };
+      let newQuestionRef = await addDoc(questionsCollectionRef, newQuestionData);
+      console.log("Added question: ", newQuestionData);
+      indices.push(newQuestionRef.id);
+    }
+    const indexRef = doc(firestore, `courses/${courseId}/questions`, "index_reviewed");
+    await setDoc(indexRef, { indices });
+    createIndex();
+  }
+
+  const handleFileUpload = (event) => {
+    const files = event.target.files;
+    if (files.length > 0) {
+      const file = files[0];
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const questions = JSON.parse(e.target.result);
+          await addQuestions(activeCourse.id, questions);
+          console.log("Questions uploaded successfully");
+        } catch (error) {
+          console.error("Error parsing JSON file: ", error);
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  async function createIndex() {
+    try {
+      console.log("indexing");
+      const questionsCollectionRef = collection(firestore, `courses/1dNndTHIF9OoukU5rqvE/questions`);
+      const querySnapshot = await getDocs(questionsCollectionRef);
+      let indices = [];
+      querySnapshot.forEach((doc) => {
+        indices.push(doc.id);
+      });
+      const indexRef = doc(firestore, `courses/1dNndTHIF9OoukU5rqvE/questions`, "index_reviewed");
+      await setDoc(indexRef, { indices: indices });
+      console.log("indexing done");
+    }
+    catch (error) { console.error("Fehler beim Index.", error.message) }
+  }
+
   if (loading) {
     return <CircularProgress />;
   }
@@ -190,7 +279,7 @@ export default function Lobby() {
               <Box>
                 <Stack sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <IconButton aria-label="Singleplayer-Modus">
-                    <SportsEsportsIcon fontSize='large' />
+                    <SportsEsportsIcon color='plainBlack' fontSize='large' />
                   </IconButton>
                   <Button color='plainBlack' variant='text'>
                     Singleplayer-Modus
@@ -207,7 +296,7 @@ export default function Lobby() {
               <Box>
                 <Stack sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <IconButton aria-label="Dashboard">
-                    <QueryStatsIcon fontSize='large' />
+                    <QueryStatsIcon color='plainBlack' fontSize='large' />
                   </IconButton>
                   <Button color='plainBlack' variant='text'>
                     Dashboard
@@ -223,7 +312,7 @@ export default function Lobby() {
             <Box>
               <Stack sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <IconButton aria-label="Coop-Modus" onClick={() => preHandleStatusChange("coop")}>
-                  <Diversity3Icon fontSize='large' />
+                  <Diversity3Icon color='plainBlack' fontSize='large' />
                 </IconButton>
                 <Button color='plainBlack' variant='text' onClick={() => preHandleStatusChange("coop")}>
                   Coop-Modus
@@ -238,7 +327,7 @@ export default function Lobby() {
             <Box>
               <Stack sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <IconButton aria-label="Competition-Modus" onClick={() => preHandleStatusChange("competition")}>
-                  <EmojiEventsIcon fontSize='large' />
+                  <EmojiEventsIcon color='plainBlack' fontSize='large' />
                 </IconButton>
                 <Button color='plainBlack' variant='text' onClick={() => preHandleStatusChange("competition")}>
                   Competition-Modus
@@ -268,7 +357,7 @@ export default function Lobby() {
             </Typography>
             <List>
               {users.map((user) => user.statuses.online && (
-                <ListItem key={user.id}>
+                <ListItem key={user.uid}>
                   <ListItemText
                     primary={user.name === activeUser.displayName ? " > Du" : ` > ${user.name}`}
                     secondary={
@@ -285,12 +374,18 @@ export default function Lobby() {
                             color={"warning"}
                             size="small"
                             style={{ marginRight: 4, textOverflow: "ellipsis" }} />)}
+                        {user.statuses.game_id != null && (
+                          <Chip
+                            label={"playing"}
+                            color={"info"}
+                            size="small"
+                            style={{ marginRight: 4, textOverflow: "ellipsis" }} />)}
                       </Box>
                     }
                   />
                 </ListItem>
               ))}
-              {users.length === 0 && (
+              {users.length === 1 && (
                 <ListItem>
                   <ListItemText primary="Keine anderen Studierenden online." />
                 </ListItem>
@@ -298,9 +393,22 @@ export default function Lobby() {
             </List>
           </CardContent>
         </Card>
-
-
       </Grid>
+
+      <Button
+        component="label"
+        role={undefined}
+        variant="contained"
+        tabIndex={-1}
+        startIcon={<CloudUploadIcon />}
+      >
+        Upload files
+        <VisuallyHiddenInput
+          type="file"
+          onChange={(event) => handleFileUpload(event)}
+          multiple
+        />
+      </Button>
     </>
   );
 }

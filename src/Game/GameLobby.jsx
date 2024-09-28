@@ -7,6 +7,7 @@ import { useFirebase } from '../useFirebase';
 import PrivateChat from './PrivateChat';
 import { useActiveCourse } from '../User/useActiveCourse';
 import { useUserStatuses } from '../User/useUserStatuses';
+import GamePlay from './GamePlay';
 
 export default function GameLobby({ gameType, gameId }) {
   const navigate = useNavigate();
@@ -19,8 +20,8 @@ export default function GameLobby({ gameType, gameId }) {
   const [isExitDialogOpen, setIsExitDialogOpen] = useState(false);
   const activeUser = auth.currentUser;
 
-  const { activeCourse } = useActiveCourse(activeUser?.uid);
-  const { exitPrivateLobby } = useUserStatuses(activeCourse?.id);
+  const { activeCourse } = useActiveCourse();
+  const { exitPrivateLobby } = useUserStatuses();
 
   useEffect(() => {
     const gameRef = databaseRef(database, `private_lobbies/${gameId}`);
@@ -31,8 +32,16 @@ export default function GameLobby({ gameType, gameId }) {
         if (snapshot.exists()) {
           const data = snapshot.val();
           setGameData(data);
-
-          const otherUserId = data.users.find(id => id !== auth.currentUser.uid);
+          let otherUserId = null;
+          if (data.user1 == activeUser.uid || data.user2 != activeUser.uid) {
+            otherUserId = data.user2;
+            console.log("You are player 1.")
+          } else if (data.user2 == activeUser.uid || data.user1 != activeUser.uid) {
+            otherUserId = data.user1;
+            console.log("You are player 2.")
+          } else {
+            setError("Fehler. Anderer Spieler konnte nicht gefunden werden.");
+          }
           const userDocRef = doc(firestore, 'users', otherUserId);
           const userDocSnap = await getDoc(userDocRef);
 
@@ -69,7 +78,7 @@ export default function GameLobby({ gameType, gameId }) {
     return () => {
       unsubscribe();
     };
-  }, [gameId, database, firestore, auth, navigate]);
+  }, [gameId, database, firestore, auth, navigate, activeUser.uid]);
 
   const handleExit = useCallback(async () => {
     try {
@@ -96,8 +105,8 @@ export default function GameLobby({ gameType, gameId }) {
 
   useBeforeUnload(
     useCallback((event) => {
-        event.preventDefault();
-        setIsExitDialogOpen(true);
+      event.preventDefault();
+      setIsExitDialogOpen(true);
     }, [])
   );
 
@@ -134,6 +143,7 @@ export default function GameLobby({ gameType, gameId }) {
       <Typography variant="h6">
         {gameType === "coop" ? "Coop-Spiel mit" : "Competition gegen"} {otherUser.display_name}
       </Typography>
+      {/* <GamePlay gameId={gameId} courseId={activeCourse?.id} /> */}
       <PrivateChat chatId={gameId} />
       <Button sx={{ mt: 2 }} variant="contained" color="secondary" onClick={openExitDialog}>
         Spiel verlassen

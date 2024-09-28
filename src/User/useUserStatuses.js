@@ -8,6 +8,7 @@ import {
   remove,
 } from "firebase/database";
 import { useFirebase } from "../useFirebase";
+import { useActiveCourse } from "./useActiveCourse";
 
 export const defaultStatuses = {
   online: true,
@@ -17,11 +18,13 @@ export const defaultStatuses = {
   gameId: null,
 };
 
-export function useUserStatuses(courseId) {
+export function useUserStatuses() {
   const { auth, database } = useFirebase();
   const activeUser = auth.currentUser;
+  const { activeCourse } = useActiveCourse();
   const [currentUserStatuses, setCurrentUserStatuses] =
     useState(defaultStatuses);
+  const courseId = activeCourse?.id;
 
   const exitPrivateLobby = useCallback(
     (privateLobbyId) => {

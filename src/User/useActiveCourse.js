@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { ref as storageRef, getDownloadURL } from 'firebase/storage';
-import { ref as databaseRef, set, remove, onDisconnect } from 'firebase/database';
+import { ref as databaseRef, set, remove, onDisconnect, get } from 'firebase/database';
 import { useFirebase } from '../useFirebase';
 
-export function useActiveCourse(userId) {
+export function useActiveCourse() {
   const [activeCourse, setActiveCourse] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  const { storage, firestore, database } = useFirebase();
+  const { storage, firestore, database, auth } = useFirebase();
+  const userId = auth?.currentUser?.uid;
 
   useEffect(() => {
     async function fetchActiveCourse() {
@@ -36,7 +36,9 @@ export function useActiveCourse(userId) {
 
             // Join the lobby for the active course
             joinLobby(userId, activeCourseId);
-          }
+          } else {
+          console.error("Active course document does not exist");
+        }
         }
       } catch (error) {
         console.error('Error:', error);
@@ -56,9 +58,18 @@ export function useActiveCourse(userId) {
 
   const joinLobby = (userId, courseId) => {
     const userStatusRef = databaseRef(database, `lobbies/${courseId}/${userId}`);
-    set(userStatusRef, {
-      online: true,
-    });
+    get(userStatusRef)
+      .then((snapshot) => {
+        if (!snapshot.exists()) {
+          set(userStatusRef, {
+            online: true,
+          });
+        }
+      })
+      .catch((error) => {
+        console.error("Error getting data:", error);
+      });
+  
     onDisconnect(userStatusRef).remove();
   };
 

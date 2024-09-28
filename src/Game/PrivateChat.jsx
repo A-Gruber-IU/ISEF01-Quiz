@@ -19,7 +19,14 @@ export default function PrivateChat({chatId}) {
         const data = snapshot.val();
         setLobbyData(data);
 
-        const otherUserId = data.users.find(id => id !== auth.currentUser.uid);
+        let otherUserId = null;
+          if (data.user1 == auth.currentUser.uid || data.user2 != auth.currentUser.uid) {
+            otherUserId = data.user2;
+          } else if (data.user2 == auth.currentUser.uid || data.user1 != auth.currentUser.uid) {
+            otherUserId = data.user1;
+          } else {
+            alert("Fehler. Anderer Chat-Teilnehmer konnte nicht gefunden werden.");
+          }
         const userDoc = await getDoc(doc(firestore, 'users', otherUserId));
         setOtherUser(userDoc.data());
       } else {
