@@ -45,7 +45,7 @@ export default function Results() {
   }, [gameId, firestore]);
 
   if (loading) {
-    return <Typography>Loading results...</Typography>;
+    return <Typography>Lade Ergebnisse...</Typography>;
   }
 
   if (error) {
@@ -53,7 +53,7 @@ export default function Results() {
   }
 
   if (!gameData) {
-    return <Typography>No game data available</Typography>;
+    return <Typography>Spiel konnte nicht geladen werden.</Typography>;
   }
 
   const { questions, answers_player1, answers_player2, game_mode, player1, player2 } = gameData;
@@ -68,13 +68,13 @@ export default function Results() {
 
   return (
     <Paper elevation={3} sx={{ p: 3, maxWidth: 800, mx: 'auto', my: 4 }}>
-      <Typography variant="h4" gutterBottom>Quiz Results</Typography>
+      <Typography variant="h4" gutterBottom>Quiz-Ergebnisse</Typography>
       <Box mb={3}>
         <Typography variant="h6">
-          Correct Answers: {correctAnswers} out of {questions.length}
+          Korrekte Antworten: {correctAnswers} von {questions.length}
         </Typography>
         <Typography variant="h6">
-          Time Taken: {minutes}m {seconds}s
+          Zeit: {minutes} Minuten {seconds} Sekunden
         </Typography>
       </Box>
       <List>
@@ -84,7 +84,7 @@ export default function Results() {
               <ListItemText
                 primary={
                   <Typography variant="h6">
-                    Question {index + 1}: {question.question_text}
+                    Frage {index + 1}: {question.question_text}
                   </Typography>
                 }
                 secondary={
@@ -125,10 +125,10 @@ export default function Results() {
             {game_mode === 'competition' && (
               <Box ml={4} mb={2}>
                 <Typography variant="body2">
-                  Your answer: {currentPlayerAnswers[index] || 'Not answered'}
+                  Deine Antwort: {currentPlayerAnswers[index] || 'keine Antwort'}
                 </Typography>
                 <Typography variant="body2">
-                  Opponent&#39;s answer: {otherPlayerAnswers[index] || 'Not answered'}
+                  Antwort deines Gegners: {otherPlayerAnswers[index] || 'keine Antwort'}
                 </Typography>
               </Box>
             )}
