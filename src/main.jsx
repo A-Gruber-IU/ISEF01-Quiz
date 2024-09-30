@@ -21,6 +21,9 @@ import Datenschutz from "./Info/Datenschutz.jsx";
 import Faqs from "./Info/Faqs.jsx";
 import SubmitQuestion from "./SubmitQuestion/SubmitQuestion.jsx";
 import Results from "./Game/Results.jsx";
+import ReviewQuestion from "./ReviewQuestion/ReviewQuestion.jsx";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const router = createBrowserRouter([
   {
@@ -58,6 +61,10 @@ const router = createBrowserRouter([
         element: <SubmitQuestion />,
       },
       {
+        path: "/reviewquestion",
+        element: <ReviewQuestion />,
+      },
+      {
         path: "impressum",
         element: <Impressum />,
       },
@@ -75,6 +82,7 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
+    <ToastContainer />
     <RouterProvider router={router} />
   </StrictMode>
 );
