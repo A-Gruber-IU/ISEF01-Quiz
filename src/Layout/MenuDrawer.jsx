@@ -19,6 +19,7 @@ import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import HomeIcon from '@mui/icons-material/Home';
 import LogoutIcon from '@mui/icons-material/Logout';
 import LibraryAddIcon from '@mui/icons-material/LibraryAdd';
+import AddTaskIcon from '@mui/icons-material/AddTask';
 
 export default function MenuDrawer({ onLogout }) {
   const [open, setOpen] = useState(false);
@@ -92,6 +93,21 @@ export default function MenuDrawer({ onLogout }) {
                 <LibraryAddIcon />
               </ListItemIcon>
               <ListItemText primary={"Frage einreichen"} />
+            </ListItemButton>
+          </NavLink>
+        </ListItem>
+        <ListItem disablePadding>
+          <NavLink
+            to={`reviewquestion`}
+            className={({ isActive, isPending }) =>
+              isActive ? "active" : isPending ? "pending" : ""
+            }
+          >
+            <ListItemButton>
+              <ListItemIcon>
+                <AddTaskIcon />
+              </ListItemIcon>
+              <ListItemText primary={"Fragen reviewen"} />
             </ListItemButton>
           </NavLink>
         </ListItem>
