@@ -78,7 +78,7 @@ export default function Chat({ chatType, chatId }) {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '400px', width: '100%', maxWidth: '800px' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '400px', width: '100%'}}>
       <Paper 
         elevation={3} 
         sx={{ flex: 1, overflow: 'auto', mb: 2, p: 2 }}

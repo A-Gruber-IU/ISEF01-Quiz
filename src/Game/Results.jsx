@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { useFirebase } from '../useFirebase';
-import { Typography, Paper, Box, List, ListItem, ListItemText, Divider } from '@mui/material';
+import { Typography, Paper, Box, List, ListItem, ListItemText, Divider, Button } from '@mui/material';
 import Grid from '@mui/material/Grid2';
+import { useUserStatuses } from '../User/useUserStatuses';
 
 export default function Results() {
   const { gameId } = useParams();
@@ -13,6 +14,18 @@ export default function Results() {
   const [error, setError] = useState(null);
   const [seconds, setSeconds] = useState(0);
   const [minutes, setMinutes] = useState(0);
+  const { exitPrivateLobby } = useUserStatuses();
+  const navigate = useNavigate();
+
+  const handleExit = useCallback(async () => {
+    try {
+      exitPrivateLobby(gameId);
+      navigate('/');
+    } catch (err) {
+      console.error("Error exiting game:", err);
+      setError("Fehler beim Verlassen des Spiels.");
+    }
+  }, [exitPrivateLobby, gameId, navigate]);
 
   useEffect(() => {
     async function fetchGameData() {
@@ -69,6 +82,9 @@ export default function Results() {
   return (
     <Paper elevation={3} sx={{ p: 3, maxWidth: 800, mx: 'auto', my: 4 }}>
       <Typography variant="h4" gutterBottom>Quiz-Ergebnisse</Typography>
+      <Button sx={{ mt: 2 }} variant="contained" color="secondary" onClick={handleExit}>
+        Spiel verlassen
+      </Button>
       <Box mb={3}>
         <Typography variant="h6">
           Korrekte Antworten: {correctAnswers} von {questions.length}
@@ -90,7 +106,7 @@ export default function Results() {
                 secondary={
                   <Grid container spacing={2} mt={1}>
                     {['A', 'B', 'C', 'D'].map((option) => (
-                      <Grid xs={12} sm={6} key={option}>
+                      <Grid size={{ xs: 12, sm: 6 }} key={option}>
                         <Box
                           sx={{
                             p: 1,
@@ -98,9 +114,9 @@ export default function Results() {
                             borderColor: 'grey.300',
                             borderRadius: 1,
                             backgroundColor: 
-                              option === question.correct_answer
+                              option === question.correct_answer.toUpperCase()
                                 ? 'success.light'
-                                : option === currentPlayerAnswers[index]
+                                : option === currentPlayerAnswers[index].toUpperCase()
                                 ? 'error.light'
                                 : 'inherit',
                           }}
@@ -108,7 +124,7 @@ export default function Results() {
                           <Typography
                             variant="body2"
                             color={
-                              option === question.correct_answer || option === currentPlayerAnswers[index]
+                              option === question.correct_answer.toUpperCase() || option === currentPlayerAnswers[index].toUpperCase()
                                 ? 'white'
                                 : 'inherit'
                             }

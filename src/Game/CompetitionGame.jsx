@@ -1,6 +1,11 @@
-export default function CompetitionGame({gameId}) {
+import { useParams } from 'react-router-dom';
+
+import GameLobby from './GameLobby';
+
+export default function CompetitionGame() {
+  const { gameId } = useParams();
 
   return (
-    <p>Hier muss das eigentliche GamePlay hin.</p>
+    <GameLobby gameType={"competition"} gameId={gameId} />
   );
 }

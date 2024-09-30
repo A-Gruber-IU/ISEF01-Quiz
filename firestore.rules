@@ -12,7 +12,8 @@ service cloud.firestore {
                           && (request.auth.uid == resource.data.player1.uid 
                           || request.auth.uid == resource.data.player2.uid
                           || request.auth.uid == request.resource.data.player1.uid 
-                          || request.auth.uid == request.resource.data.player2.uid);
+                          || request.auth.uid == request.resource.data.player2.uid
+                          || resource == null );
     }
 
     match /users/{userId} {

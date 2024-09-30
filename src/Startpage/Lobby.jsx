@@ -271,59 +271,64 @@ export default function Lobby() {
       </Grid>
       <h2 className='normHeadline'>Kurs-Lobby</h2>
       <Grid container spacing={2}>
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+        <Grid size={{ xs: 12, sm: 4, md: 3, lg: 3 }}>
           <ActiveCourseDisplay
             activeCourse={activeCourse}
             courseLoading={courseLoading}
             handleChangeCourse={handleChangeCourse}
           />
         </Grid>
-        <Grid size={{ xs: 12, sm: 10, md: 8, lg: 6 }}>
-          <Chat chatType="lobby_chats" chatId={courseId} />
+        <Grid container size={{ xs: 12, sm: 8, md: 9, lg: 9 }}>
+          <Grid size={{ xs: 12, sm: 12, md: 8, lg: 9 }}>
+            <Chat chatType="lobby_chats" chatId={courseId} />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+            <Card sx={{ marginBottom: 3 }}>
+              <CardContent>
+                <Typography variant="subtitle2" className='normHeadline' gutterBottom>
+                  WER IST ONLINE?
+                </Typography>
+                <List>
+                  {users.map((user) => user.statuses.online && (
+                    <ListItem key={user.uid}>
+                      <ListItemText
+                        primary={user.name === activeUser.displayName ? " > Du" : ` > ${user.name}`}
+                        secondary={
+                          <Box>
+                            {user.statuses.coop && (
+                              <Chip
+                                label={"coop"}
+                                color={"success"}
+                                size="small"
+                                style={{ marginRight: 4, textOverflow: "ellipsis" }} />)}
+                            {user.statuses.competition && (
+                              <Chip
+                                label={"competition"}
+                                color={"warning"}
+                                size="small"
+                                style={{ marginRight: 4, textOverflow: "ellipsis" }} />)}
+                            {user.statuses.game_id != null && (
+                              <Chip
+                                label={"playing"}
+                                color={"info"}
+                                size="small"
+                                style={{ marginRight: 4, textOverflow: "ellipsis" }} />)}
+                          </Box>
+                        }
+                      />
+                    </ListItem>
+                  ))}
+                  {users.length === 1 && (
+                    <ListItem>
+                      <ListItemText primary="Keine anderen Studierenden online." />
+                    </ListItem>
+                  )}
+                </List>
+              </CardContent>
+            </Card>
+          </Grid>
         </Grid>
-        <Card sx={{ marginBottom: 3, width: "13rem" }}>
-          <CardContent>
-            <Typography variant="subtitle2" className='normHeadline' gutterBottom>
-              WER IST ONLINE?
-            </Typography>
-            <List>
-              {users.map((user) => user.statuses.online && (
-                <ListItem key={user.uid}>
-                  <ListItemText
-                    primary={user.name === activeUser.displayName ? " > Du" : ` > ${user.name}`}
-                    secondary={
-                      <Box>
-                        {user.statuses.coop && (
-                          <Chip
-                            label={"coop"}
-                            color={"success"}
-                            size="small"
-                            style={{ marginRight: 4, textOverflow: "ellipsis" }} />)}
-                        {user.statuses.competition && (
-                          <Chip
-                            label={"competition"}
-                            color={"warning"}
-                            size="small"
-                            style={{ marginRight: 4, textOverflow: "ellipsis" }} />)}
-                        {user.statuses.game_id != null && (
-                          <Chip
-                            label={"playing"}
-                            color={"info"}
-                            size="small"
-                            style={{ marginRight: 4, textOverflow: "ellipsis" }} />)}
-                      </Box>
-                    }
-                  />
-                </ListItem>
-              ))}
-              {users.length === 1 && (
-                <ListItem>
-                  <ListItemText primary="Keine anderen Studierenden online." />
-                </ListItem>
-              )}
-            </List>
-          </CardContent>
-        </Card>
+
       </Grid>
     </>
   );

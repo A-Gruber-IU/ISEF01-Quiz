@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useBeforeUnload } from 'react-router-dom';
 import { ref as databaseRef, onValue, get } from 'firebase/database';
-import { doc, getDoc } from 'firebase/firestore';
+import { deleteDoc, doc, getDoc } from 'firebase/firestore';
 import { Box, Typography, Button, Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { useFirebase } from '../useFirebase';
 import PrivateChat from './PrivateChat';
@@ -24,11 +24,11 @@ export default function GameLobby({ gameType, gameId }) {
   const { exitPrivateLobby } = useUserStatuses();
 
   useEffect(() => {
-    const gameRef = databaseRef(database, `private_lobbies/${gameId}`);
+    const privateLobbyRef = databaseRef(database, `private_lobbies/${gameId}`);
 
     async function fetchInitialData() {
       try {
-        const snapshot = await get(gameRef);
+        const snapshot = await get(privateLobbyRef);
         if (snapshot.exists()) {
           const data = snapshot.val();
           setGameData(data);
@@ -63,7 +63,7 @@ export default function GameLobby({ gameType, gameId }) {
 
     fetchInitialData();
 
-    const unsubscribe = onValue(gameRef, async (snapshot) => {
+    const unsubscribe = onValue(privateLobbyRef, async (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
         setGameData(data);
@@ -83,12 +83,17 @@ export default function GameLobby({ gameType, gameId }) {
   const handleExit = useCallback(async () => {
     try {
       exitPrivateLobby(gameId);
+      const gameRef = doc(firestore, 'game_data', gameId);
+      const docSnap = await getDoc(gameRef);
+      if (docSnap.exists()) {
+        await deleteDoc(gameRef);
+      }
       navigate('/');
     } catch (err) {
       console.error("Error exiting game:", err);
       setError("Fehler beim Verlassen des Spiels.");
     }
-  }, [exitPrivateLobby, gameId, navigate]);
+  }, [exitPrivateLobby, firestore, gameId, navigate]);
 
   const openExitDialog = useCallback(() => {
     setIsExitDialogOpen(true);
@@ -143,7 +148,7 @@ export default function GameLobby({ gameType, gameId }) {
       <Typography variant="h6">
         {gameType === "coop" ? "Coop-Spiel mit" : "Competition gegen"} {otherUser.display_name}
       </Typography>
-      {/* <GamePlay gameId={gameId} courseId={activeCourse?.id} /> */}
+      <GamePlay gameId={gameId} courseId={activeCourse?.id} />
       <PrivateChat chatId={gameId} />
       <Button sx={{ mt: 2 }} variant="contained" color="secondary" onClick={openExitDialog}>
         Spiel verlassen

@@ -11,8 +11,8 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Root from "./root.jsx";
 import ErrorPage from "./errorPage.jsx";
 import SingleGame from "./Game/SingleGame.jsx";
-import CoopRoute from "./Game/CoopRoute.jsx";
-import CompetitionRoute from "./Game/CompetitionRoute.jsx";
+import CoopGame from "./Game/CoopGame.jsx";
+import CompetitionGame from "./Game/CompetitionGame.jsx";
 import Profile from "./User/Profile.jsx";
 import Dashboard from "./Dashboard.jsx";
 import Index from "./Startpage/index.jsx";
@@ -39,11 +39,11 @@ const router = createBrowserRouter([
       },
       {
         path: "coop/:gameId",
-        element: <CoopRoute />,
+        element: <CoopGame />,
       },
       {
         path: "competition/:gameId",
-        element: <CompetitionRoute />,
+        element: <CompetitionGame />,
       },
       {
         path: "results/:gameId",

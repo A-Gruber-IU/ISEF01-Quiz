@@ -1,6 +1,11 @@
-export default function CoopGame({gameId}) {
+import { useParams } from 'react-router-dom';
 
-    return (
-      <p>Hier muss das eigentliche GamePlay hin.</p>
-    );
-  }
+import GameLobby from './GameLobby';
+
+export default function CoopGame() {
+  const { gameId } = useParams();
+
+  return (
+    <GameLobby gameType="coop" gameId={gameId} />
+  );
+}
