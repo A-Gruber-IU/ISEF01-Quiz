@@ -91,13 +91,23 @@ export default function GamePlay({ courseId, gameId }) {
           setQuestions(data.questions);
         }
 
+        const currentPlayerReady = isPlayer1inDB ? data.player1_ready_for_next : data.player2_ready_for_next;
+        const otherPlayerReady = isPlayer1inDB ? data.player2_ready_for_next : data.player1_ready_for_next;
+
+        if (data.game_mode === 'single') {
+          if (currentPlayerReady) {
+            const nextQuestionIndex = data.current_question_index + 1;
+            await updateDoc(gameRef, {
+              player1_ready_for_next: false,
+              current_question_index: nextQuestionIndex,
+            });
+          }
+        }
+
         // This block sets the readiness status of both players when playing coop or competititon
         if (data.game_mode !== 'single') {
           const otherPlayerAnswers = isPlayer1inDB ? data.answers_player2 : data.answers_player1;
           setOtherPlayerAnswer(otherPlayerAnswers ? otherPlayerAnswers[data.current_question_index] : null);
-
-          const currentPlayerReady = isPlayer1inDB ? data.player1_ready_for_next : data.player2_ready_for_next;
-          const otherPlayerReady = isPlayer1inDB ? data.player2_ready_for_next : data.player1_ready_for_next;
 
           if (currentPlayerReady && !otherPlayerReady) {
             setWaitingForOtherPlayer(true);
