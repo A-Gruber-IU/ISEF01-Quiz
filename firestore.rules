@@ -39,12 +39,14 @@ service cloud.firestore {
         allow create: if request.auth.uid == request.resource.data.authorId
                       && request.resource.data.keys().hasAll(['authorId', 'reviewed', 'question_text', 'answer_a', 'answer_b', 'answer_c', 'answer_d', 'correct_answer', 'reviewerID'])
                       && request.resource.data.reviewed == false;
-        allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reviewed', 'reviewerID'])
+        allow update: if request.auth != null 
+                      && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reviewed', 'reviewerID'])
                       && request.resource.data.diff(resource.data).affectedKeys().hasAll(['reviewed', 'reviewerID'])
-                      && request.auth != null 
                       && request.auth.uid != request.resource.data.authorId
-                      && request.auth.uid == request.resource.data.reviewerId;
-        allow delete: if request.auth != null 
+                      && request.auth.uid == request.resource.data.reviewerID;
+        allow delete: if request.auth != null
+                      && resource.data.reviewed == false;
+                      // && get(/databases/$(database)/documents/courses/$(courseId)/questions/$(questionId)).data.reviewed == false;
                       
       }
     }

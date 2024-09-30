@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import "./reviewquestion.css";
 import {
   Typography,
@@ -15,6 +15,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   getDocs,
   query,
   updateDoc,
@@ -84,23 +85,29 @@ const ReviewQuestion = () => {
         "questions",
         currentQuestion[0].id
       );
-      await updateDoc(questionRef, {
-        reviewed: true,
-        reviewerID: user?.uid,
-      });
-      const filteredQuestions = questions.filter(
-        (element, index) => index !== currentPage
-      );
+      const docSnap = await getDoc(questionRef);
+      const data = docSnap.data();
+      if (data.authorId == user?.uid) {
+        toast.error("Du kannst nicht deine eigenen Fragen reviewen.")
+      } else {
+        await updateDoc(questionRef, {
+          reviewed: true,
+          reviewerID: user?.uid,
+        });
+        const filteredQuestions = questions.filter(
+          (element, index) => index !== currentPage
+        );
 
-      if (currentPage === 0 && filteredQuestions.length === 0) {
-        setCurrentQuestion([]);
-      } else if (currentPage === 0 && filteredQuestions.length > 0) {
-        setCurrentQuestion([filteredQuestions[0]]);
-      } else if (currentPage !== 0 && filteredQuestions.length > 0) {
-        setCurrentQuestion([questions[currentPage - 1]]);
-        setCurrentPage((prev) => prev - 1);
+        if (currentPage === 0 && filteredQuestions.length === 0) {
+          setCurrentQuestion([]);
+        } else if (currentPage === 0 && filteredQuestions.length > 0) {
+          setCurrentQuestion([filteredQuestions[0]]);
+        } else if (currentPage !== 0 && filteredQuestions.length > 0) {
+          setCurrentQuestion([questions[currentPage - 1]]);
+          setCurrentPage((prev) => prev - 1);
+        }
+        setQuestions(filteredQuestions);
       }
-      setQuestions(filteredQuestions);
     } catch (error) {
       toast.error(error.code.replace(/[/-]/g, " "));
       console.log(error);
@@ -116,21 +123,27 @@ const ReviewQuestion = () => {
         "questions",
         currentQuestion[0].id
       );
-      await deleteDoc(questionRef);
-
-      const filteredQuestions = questions.filter(
-        (_, index) => index !== currentPage
-      );
-
-      if (currentPage != 0 && questions.length > 1) {
-        setCurrentQuestion([questions[currentPage - 1]]);
-        setCurrentPage((prev) => prev - 1);
-      } else if (currentPage === 0 && questions.length > 1) {
-        setCurrentQuestion([filteredQuestions[0]]);
+      const docSnap = await getDoc(questionRef);
+      const data = docSnap.data();
+      if (data.authorId == user?.uid) {
+        toast.error("Du kannst nicht deine eigenen Fragen reviewen.")
       } else {
-        setCurrentQuestion([]);
+        await deleteDoc(questionRef);
+
+        const filteredQuestions = questions.filter(
+          (_, index) => index !== currentPage
+        );
+
+        if (currentPage != 0 && questions.length > 1) {
+          setCurrentQuestion([questions[currentPage - 1]]);
+          setCurrentPage((prev) => prev - 1);
+        } else if (currentPage === 0 && questions.length > 1) {
+          setCurrentQuestion([filteredQuestions[0]]);
+        } else {
+          setCurrentQuestion([]);
+        }
+        setQuestions(filteredQuestions);
       }
-      setQuestions(filteredQuestions);
     } catch (error) {
       toast.error(error.code.replace(/[/-]/g, " "));
       console.log(error);
@@ -262,14 +275,14 @@ const ReviewQuestion = () => {
                     color="success"
                     onClick={handleApproveQuestion}
                   >
-                    Approve
+                    Frage freigeben
                   </Button>
                   <Button
                     variant="contained"
                     color="error"
                     onClick={handleDeclineQuestion}
                   >
-                    Not Approve
+                    Frage ablehnen
                   </Button>
                 </Box>
                 ;
