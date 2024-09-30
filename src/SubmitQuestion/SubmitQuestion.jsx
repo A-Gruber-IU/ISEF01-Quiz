@@ -16,6 +16,7 @@ import {
 
 import { useFirebase } from "../useFirebase";
 import { addDoc, collection, doc, getDoc, getDocs } from "firebase/firestore";
+import { toast } from "react-toastify";
 
 const SubmitQuestion = () => {
   const [question, setQuestion] = useState("");
@@ -56,29 +57,37 @@ const SubmitQuestion = () => {
         setAnswerC("");
         setAnswerD("");
         setCorrectAnswer("");
+        toast.success("Danke für deine Frage!");
       }
     } catch (error) {
+      toast.error(error.code.replace(/[/-]/g, " "));
       console.log(error);
     }
   };
 
   useEffect(() => {
     const fetchCourses = async () => {
-      const userDoc = await getDoc(doc(firestore, 'users', userID));
-      const userData = userDoc.data();
-      const userCourses = userData.courses;
-      const myCourses = [];
-      if (userCourses?.length > 0) {
-        for (const userCourseId of userCourses) {
-          const courseDoc = await getDoc(doc(firestore, 'courses', userCourseId));
-          const courseData = courseDoc.data();
-          if (courseData) {
-            myCourses.push({ ...courseData, id: userCourseId });
+      try {
+        const userDoc = await getDoc(doc(firestore, "users", userID));
+        const userData = userDoc.data();
+        const userCourses = userData?.courses;
+        const myCourses = [];
+        if (userCourses?.length > 0) {
+          for (const userCourseId of userCourses) {
+            const courseDoc = await getDoc(
+              doc(firestore, "courses", userCourseId)
+            );
+            const courseData = courseDoc.data();
+            if (courseData) {
+              myCourses.push({ ...courseData, id: userCourseId });
+            }
           }
         }
+        setCourses(myCourses);
+      } catch (error) {
+        toast.error(error.code?.replace(/[/-]/g, " "));
+        console.log(error);
       }
-      setCourses(myCourses);
-      console.log(myCourses);
     };
 
     fetchCourses();

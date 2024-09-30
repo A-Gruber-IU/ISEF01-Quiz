@@ -44,6 +44,8 @@ service cloud.firestore {
                       && request.auth != null 
                       && request.auth.uid != request.resource.data.authorId
                       && request.auth.uid == request.resource.data.reviewerId;
+        allow delete: if request.auth != null 
+                      
       }
     }
     
