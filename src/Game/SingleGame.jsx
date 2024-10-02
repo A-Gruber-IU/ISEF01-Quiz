@@ -86,7 +86,7 @@ export default function SingleGame() {
         return (
             <>
                 <GamePlay courseId={activeCourse?.id} gameId={activeUser?.uid} />
-                <Button sx={{ mt: 2 }} variant="contained" color="secondary" onClick={openExitDialog}>
+                <Button sx={{ mt: 2 }} variant="contained" color="warning" onClick={openExitDialog}>
                     Spiel verlassen
                 </Button>
                 <Dialog

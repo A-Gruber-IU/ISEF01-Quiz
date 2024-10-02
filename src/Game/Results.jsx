@@ -18,7 +18,6 @@ export default function Results() {
   const navigate = useNavigate();
   const { activeCourse } = useActiveCourse();
 
-
   const exitPrivateLobby = useCallback(
     (privateLobbyId) => {
       const defaultStatuses = {
@@ -45,13 +44,15 @@ export default function Results() {
 
   const handleExit = useCallback(async () => {
     try {
-      exitPrivateLobby(gameId);
+      if (gameData?.game_mode !== "single") {
+        exitPrivateLobby(gameId);
+      }
       navigate('/');
     } catch (err) {
       console.error("Error exiting game:", err);
       setError("Fehler beim Verlassen des Spiels.");
     }
-  }, [exitPrivateLobby, gameId, navigate]);
+  }, [exitPrivateLobby, gameData?.game_mode, gameId, navigate]);
 
   useEffect(() => {
     async function fetchGameData() {
@@ -92,41 +93,89 @@ export default function Results() {
   }
 
   if (!gameData) {
-    return <Typography>Spiel konnte nicht geladen werden.</Typography>;
+    return <Typography>Spieldaten konnten nicht geladen werden.</Typography>;
   }
 
-  const { questions, answers_player1, answers_player2, game_mode, player1, player2 } = gameData;
+  const isPlayer1 = auth.currentUser.uid === gameData.player1.uid;
+  const currentPlayerAnswers = isPlayer1 ? gameData.answers_player1 : gameData.answers_player2;
+  const otherPlayerAnswers = isPlayer1 ? gameData.answers_player2 : gameData.answers_player1;
 
-  const isPlayer1 = auth.currentUser.uid === player1.uid;
-  const currentPlayerAnswers = isPlayer1 ? answers_player1 : answers_player2;
-  const otherPlayerAnswers = isPlayer1 ? answers_player2 : answers_player1;
-
-  const correctAnswers = questions.reduce((count, question, index) => {
+  const correctAnswers = gameData?.questions.reduce((count, question, index) => {
     return count + (currentPlayerAnswers[index] === question.correct_answer ? 1 : 0);
+  }, 0);
+
+  const correctAnswersOpponent = gameData?.questions.reduce((count, question, index) => {
+    if (gameData?.game_mode != "single") {
+      return count + (otherPlayerAnswers[index] === question.correct_answer ? 1 : 0);
+    } else {
+      return 0
+    }
   }, 0);
 
   return (
     <Paper elevation={3} sx={{ p: 3, maxWidth: 800, mx: 'auto', my: 4 }}>
-      <Typography variant="h4" gutterBottom>Quiz-Ergebnisse</Typography>
-      <Button sx={{ mt: 2 }} variant="contained" color="secondary" onClick={handleExit}>
-        Spiel verlassen
-      </Button>
-      <Box mb={3}>
-        <Typography variant="h6">
-          Korrekte Antworten: {correctAnswers} von {questions.length}
-        </Typography>
-        <Typography variant="h6">
-          Zeit: {minutes} Minuten {seconds} Sekunden
-        </Typography>
-      </Box>
+      <Grid size={{ xs: 12 }} sx={{ mb: 3 }} container spacing={2}>
+        <Grid size={{ xs: 12 }} >
+          <Typography
+            variant="h5"
+            noWrap
+            gutterBottom
+            className='iuHeadline1'
+            sx={{
+              fontWeight: 700
+            }}
+          >
+            DEINE ERGEBNISSE
+          </Typography>
+        </Grid>
+        <Grid size={{ xs: 12 }} >
+          <Button variant="contained" color="secondary" onClick={handleExit}>
+            Spiel verlassen
+          </Button>
+        </Grid>
+        <Grid size={{ xs: 12 }} >
+          <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+            Korrekte Antworten
+          </Typography>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }} >
+          <Typography variant="h6">
+            Du:
+          </Typography>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 9 }} >
+          <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+            {correctAnswers} von {gameData?.questions.length}
+          </Typography>
+        </Grid>
+        {gameData?.game_mode === 'competition' && (
+          <>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <Typography variant="h6">
+                Gegenspieler:
+              </Typography>
+            </Grid><Grid size={{ xs: 12, sm: 6, md: 9 }}>
+              <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                {correctAnswersOpponent} von {gameData?.questions.length}
+              </Typography>
+            </Grid>
+          </>
+        )}
+        <Grid>
+          <Typography variant="h6">
+            Das Spiel dauerte {minutes} {(minutes == 1) ? "Minute" : "Minuten"} {seconds} {(seconds == 1) ? "Sekunde" : "Sekunden"}.
+          </Typography>
+        </Grid>
+      </Grid>
+
       <List>
-        {questions.map((question, index) => (
+        {gameData?.questions.map((question, index) => (
           <>
             <ListItem alignItems="flex-start">
               <ListItemText
                 primary={
                   <Typography variant="h6">
-                    Frage {index + 1}: {question.question_text}
+                    Frage {index + 1}: {gameData?.questions.question_text}
                   </Typography>
                 }
                 secondary={
@@ -139,12 +188,12 @@ export default function Results() {
                             border: '1px solid',
                             borderColor: 'grey.300',
                             borderRadius: 1,
-                            backgroundColor: 
+                            backgroundColor:
                               option === question.correct_answer.toUpperCase()
                                 ? 'success.light'
                                 : option === currentPlayerAnswers[index].toUpperCase()
-                                ? 'error.light'
-                                : 'inherit',
+                                  ? 'error.light'
+                                  : 'inherit',
                           }}
                         >
                           <Typography
@@ -164,17 +213,17 @@ export default function Results() {
                 }
               />
             </ListItem>
-            {game_mode === 'competition' && (
+            {gameData?.game_mode === 'competition' && (
               <Box ml={4} mb={2}>
                 <Typography variant="body2">
-                  Deine Antwort: {currentPlayerAnswers[index] || 'keine Antwort'}
+                  Deine Antwort: {currentPlayerAnswers[index].toUpperCase() || 'keine Antwort'}
                 </Typography>
                 <Typography variant="body2">
-                  Antwort deines Gegners: {otherPlayerAnswers[index] || 'keine Antwort'}
+                  Antwort deines Gegners: {otherPlayerAnswers[index].toUpperCase() || 'keine Antwort'}
                 </Typography>
               </Box>
             )}
-            {index < questions.length - 1 && <Divider component="li" />}
+            {index < gameData?.questions.length - 1 && <Divider component="li" />}
           </>
         ))}
       </List>

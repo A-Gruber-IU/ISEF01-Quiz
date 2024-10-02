@@ -174,7 +174,7 @@ export default function GameLobby({ gameType, gameId }) {
       </Typography>
       <GamePlay gameId={gameId} courseId={activeCourse?.id} />
       <PrivateChat chatId={gameId} />
-      <Button sx={{ mt: 2 }} variant="contained" color="secondary" onClick={openExitDialog}>
+      <Button sx={{ mt: 2 }} variant="contained" color="warning" onClick={openExitDialog}>
         Spiel verlassen
       </Button>
       <Dialog
