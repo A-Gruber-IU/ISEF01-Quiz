@@ -15,7 +15,6 @@ export default function GamePlay({ courseId, gameId }) {
   const [otherPlayerAnswer, setOtherPlayerAnswer] = useState(null);
   const [notEnoughQuestions, setNotEnoughQuestions] = useState(false);
   const [waitingForOtherPlayer, setWaitingForOtherPlayer] = useState(false);
-  const [otherPlayerWaiting, setOtherPlayerWaiting] = useState(false);
   const { auth, firestore } = useFirebase();
   const navigate = useNavigate();
   const currentQuestion = questions[currentQuestionIndex];
@@ -111,11 +110,8 @@ export default function GamePlay({ courseId, gameId }) {
 
           if (currentPlayerReady && !otherPlayerReady) {
             setWaitingForOtherPlayer(true);
-          } else if (!currentPlayerReady && otherPlayerReady) {
-            setOtherPlayerWaiting(true);
           } else if (currentPlayerReady && otherPlayerReady) {
             setWaitingForOtherPlayer(false);
-            setOtherPlayerWaiting(false);
             const nextQuestionIndex = data.current_question_index + 1;
             await updateDoc(gameRef, {
               player1_ready_for_next: false,

@@ -9,11 +9,10 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 import { connectAuthEmulator, signOut } from "firebase/auth";
 import { connectFirestoreEmulator, getDoc, doc } from "firebase/firestore";
-import { connectDatabaseEmulator, ref as databaseRef, remove, onDisconnect } from "firebase/database";
+import { connectDatabaseEmulator, ref as databaseRef, remove, onDisconnect, get } from "firebase/database";
 import { connectStorageEmulator } from 'firebase/storage';
 
 import { useFirebase } from './useFirebase';
-import { useUserStatuses } from './User/useUserStatuses';
 import { useActiveCourse } from './User/useActiveCourse';
 
 const iuTheme = createTheme({
@@ -71,7 +70,6 @@ export default function Root() {
     const navigation = useNavigation();
     const { auth, app, firestore, database, storage } = useFirebase();
     const { activeCourse } = useActiveCourse();
-    const { currentUserStatuses } = useUserStatuses();
 
     useEffect(() => {
         if (isDevelopment) {
@@ -86,28 +84,33 @@ export default function Root() {
                 isTokenAutoRefreshEnabled: true
             });
         }
-    }, [app, auth]);
+    }, [app, auth, database, firestore, storage]);
 
     useEffect(() => {
         if (activeUser && activeCourse) {
             const userStatusRef = databaseRef(database, `lobbies/${activeCourse.id}/${activeUser.uid}`);
+            async function fetchStatus() {
+                const snap = await get(userStatusRef);
+                return snap;
+            }
+            const userStatusSnap = fetchStatus();
             onDisconnect(userStatusRef).remove();
 
             // If the user has an active game, set up onDisconnect for that as well
-            if (currentUserStatuses.gameId) {
-                const gameRef = databaseRef(database, `private_lobbies/${currentUserStatuses.gameId}`);
+            if (userStatusSnap?.status?.game_id) {
+                const gameRef = databaseRef(database, `private_lobbies/${userStatusSnap?.status.game_id}`);
                 onDisconnect(gameRef).remove();
             }
 
             return () => {
                 // Clear the onDisconnect operations when the component unmounts
                 onDisconnect(userStatusRef).cancel();
-                if (currentUserStatuses.gameId) {
-                    onDisconnect(databaseRef(database, `private_lobbies/${currentUserStatuses.gameId}`)).cancel();
+                if (userStatusSnap?.status.game_id) {
+                    onDisconnect(databaseRef(database, `private_lobbies/${userStatusSnap?.status.game_id}`)).cancel();
                 }
             };
         }
-    }, [activeUser, activeCourse, database, currentUserStatuses.gameId]);
+    }, [activeUser, activeCourse, database]);
 
     useEffect(() => {
         console.log("New activeUser:", activeUser);

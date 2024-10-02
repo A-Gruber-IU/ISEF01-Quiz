@@ -9,8 +9,6 @@ import "@fontsource/source-sans-pro/700.css";
 import "./Layout/styles.css";
 
 export default function Dashboard() {
-  const { auth } = useFirebase();
-  const activeUser = auth.currentUser;
   const { activeCourse, loading, updateActiveCourse } = useActiveCourse();
 
   function handleChangeCourse(courseId) {

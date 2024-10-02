@@ -89,7 +89,7 @@ export default function Profile() {
     // Um den tatsächlichen Datenzugriff einzuschränken bräuchte es Custom Claims mit der Admin SDK und Cloud Functions (Validierung)
     let profileItems = [
         { label: 'Nutzername', value: user.displayName, editable: true },
-        { label: 'Email', value: user.email,editable: false },
+        { label: 'Email', value: user.email, editable: false },
         { label: 'Email verifiziert', value: user.emailVerified ? 'Ja' : 'Nein', editable: false },
     ];
 
@@ -106,23 +106,27 @@ export default function Profile() {
             >
                 DEIN PROFIL
             </Typography>
-            <Grid container spacing={2}>
+            <Grid container size={{ xs: 12 }} spacing={2} >
                 {profileItems.map((item) => (
-                    <Grid size={12} key={item.label}>
-                        <Typography
-                            component="div"
-                            className='normText'
-                            sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                '& > :first-of-type': {
-                                    fontWeight: 'bold',
-                                    minWidth: '150px',
-                                    marginRight: 2,
-                                },
-                            }}
-                        >
-                            <span>{item.label}:</span>
+                    <Grid container size={{ xs: 12 }} key={item.label}>
+                        <Grid size={{ xs: 12, md: 3 }}>
+                            <Typography
+                                component="div"
+                                className='normText'
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    '& > :first-of-type': {
+                                        fontWeight: 'bold',
+                                        minWidth: '150px',
+                                        marginRight: 2,
+                                    },
+                                }}
+                            >
+                                <span>{item.label}:</span>
+                            </Typography>
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 9 }}>
                             {item.editable && isEditing ? (
                                 <TextField
                                     value={newDisplayName}
@@ -131,7 +135,17 @@ export default function Profile() {
                                     sx={{ marginRight: 1 }}
                                 />
                             ) : (
+                                <Typography
+                                component="div"
+                                className='normText'
+                                sx={{
+                                    fontWeight: '400',
+                                    display: 'felx',
+                                    alignItems: 'center',
+                                }}
+                            >
                                 <span>{item.value}</span>
+                                </Typography>
                             )}
                             {item.editable && (
                                 isEditing ? (
@@ -149,10 +163,10 @@ export default function Profile() {
                                     </Button>
                                 )
                             )}
-                        </Typography>
+                        </Grid>
                     </Grid>
                 ))}
-                <Grid mt={2} size={12} >
+                <Grid mt={2} size={{ xs: 12 }} >
                     <Button color="secondary" variant="contained" onClick={handleClickDialogOpen}>
                         Passwort ändern
                     </Button>

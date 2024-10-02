@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { doc, getDoc, serverTimestamp as serverTimestampFS, setDoc } from 'firebase/firestore';
 import { ref as databaseRef, onValue, set, push, get, remove, serverTimestamp as serverTimestampDB } from 'firebase/database';
 import { NavLink, useNavigate } from 'react-router-dom';
@@ -15,7 +15,6 @@ import QueryStatsIcon from '@mui/icons-material/QueryStats';
 import { useFirebase } from '../useFirebase';
 import { ActiveCourseDisplay } from './ActiveCourseDisplay';
 import { useActiveCourse } from '../User/useActiveCourse';
-import { useUserStatuses } from '../User/useUserStatuses';
 
 export default function Lobby() {
   const { auth, database, firestore } = useFirebase();
@@ -23,10 +22,18 @@ export default function Lobby() {
   const { activeCourse, courseLoading, updateActiveCourse } = useActiveCourse();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [courseId, setCourseId] = useState("");
+  const [courseId, setCourseId] = useState(null);
   const navigate = useNavigate();
-  const { currentUserStatuses, handleStatusChange } = useUserStatuses(courseId);
+  const defaultStatuses = {
+    online: true,
+    coop: false,
+    competition: false,
+    matching_user_id: null,
+    game_id: null,
+  };
+  const [currentUserStatuses, setCurrentUserStatuses] = useState(defaultStatuses);
 
+console.log("rerender")
 
   function handleChangeCourse(courseId) {
     updateActiveCourse(courseId);
@@ -39,17 +46,17 @@ export default function Lobby() {
   }, [activeCourse]);
 
   useEffect(() => {
-    console.log("useEffect Hook triggered for user data.");
     if (!activeUser || !courseId) return;
-
     const lobbyRef = databaseRef(database, `lobbies/${courseId}`);
 
+    // Sets up a listener for changes in realtime database at reference
     const getAllUsersData = onValue(lobbyRef, async (snapshot) => {
-      console.log("getAllUsersData triggered.");
+      console.log("onValue listener for lobby data set up.");
       if (snapshot.exists()) {
         const lobbyData = snapshot.val();
         const userIds = Object.keys(lobbyData);
 
+        // Map data from course lobby to users' statuses
         const userPromises = userIds.map(async (userId) => {
           const userDoc = await getDoc(doc(firestore, 'users', userId));
           return {
@@ -58,7 +65,6 @@ export default function Lobby() {
             statuses: lobbyData[userId]
           };
         });
-
         const resolvedUsers = await Promise.all(userPromises);
         setUsers((prevUsers) => {
           if (JSON.stringify(prevUsers) !== JSON.stringify(resolvedUsers)) {
@@ -67,6 +73,12 @@ export default function Lobby() {
           return prevUsers;
         });
 
+        // Find own active user reference
+        const activeUserDB = users.find(user => user.uid === activeUser.uid);
+        setCurrentUserStatuses(activeUserDB.statuses);
+        console.log("activeUserDB.statuses", activeUserDB.statuses)
+
+        // Check if there is a game smatch among users
         const matchingUser = users.find(user =>
           user.uid !== activeUser.uid &&
           ((user.statuses["coop"] && currentUserStatuses.coop) || (user.statuses["competition"] && currentUserStatuses.competition)) &&
@@ -125,9 +137,9 @@ export default function Lobby() {
       const match = users.find(user =>
         user.uid !== activeUser.uid && user.statuses[status]
       );
-      console.log("Found match: ", match);
 
       if (match) {
+        console.log("Found match: ", match);
         // Check if an old game already exists and if so, delete
         const privateLobbiesRef = databaseRef(database, `private_lobbies`);
         const privateLobbiesSnapshot = await get(privateLobbiesRef);
@@ -191,9 +203,13 @@ export default function Lobby() {
     }
     if (activeUser && courseId && gameId == null) {
       //  Change Status of current user in database if there was no match
-      let newStatuses = { ...currentUserStatuses };
-      newStatuses[status] = !currentUserStatuses[status];
-      handleStatusChange(newStatuses);
+      const userStatusRef = databaseRef(database, `lobbies/${courseId}/${activeUser.uid}`);
+      const userStatusSnapshot = await get(userStatusRef);
+      const userStatusVal = userStatusSnapshot.val();
+      console.log("User Statuses DB Val: ", userStatusVal);
+      let newStatuses = { ...userStatusVal };
+      newStatuses[status] = !userStatusVal[status];
+      await set(userStatusRef, newStatuses);
     }
   }
 

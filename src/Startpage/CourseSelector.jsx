@@ -44,7 +44,6 @@ export function CourseSelector({ activeCourse, handleChangeCourse }) {
       try {
         const coursePromises = userCourses.map(async (courseId) => {
           const courseDoc = await getDoc(doc(firestore, "courses", courseId));
-          console.log("Fetching course data:", courseDoc);
           if (courseDoc.exists()) {
             const data = courseDoc.data();
             const imageUrl = await getDownloadURL(

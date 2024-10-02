@@ -9,13 +9,19 @@ export function useActiveCourse() {
   const [loading, setLoading] = useState(true);
   const { storage, firestore, database, auth } = useFirebase();
   const userId = auth?.currentUser?.uid;
+  const defaultStatuses = {
+    online: true,
+    coop: false,
+    competition: false,
+    matching_user_id: null,
+    game_id: null,
+  };
 
   useEffect(() => {
     async function fetchActiveCourse() {
       if (!userId) return;
 
       try {
-        console.log("Active user ID:", userId);
         const userDocRef = doc(firestore, 'users', userId);
         const userDoc = await getDoc(userDocRef);
 
@@ -26,7 +32,6 @@ export function useActiveCourse() {
 
           if (courseDoc.exists()) {
             const courseData = courseDoc.data();
-            console.log("Active course:", courseData);
             const imageUrl = await getDownloadURL(storageRef(storage, courseData.image_path));
             setActiveCourse({
               id: activeCourseId,
@@ -37,8 +42,8 @@ export function useActiveCourse() {
             // Join the lobby for the active course
             joinLobby(userId, activeCourseId);
           } else {
-          console.error("Active course document does not exist");
-        }
+            console.error("Active course document does not exist");
+          }
         }
       } catch (error) {
         console.error('Error:', error);
@@ -56,34 +61,41 @@ export function useActiveCourse() {
     };
   }, [userId, firestore, storage, database]);
 
-  const joinLobby = (userId, courseId) => {
+
+  async function joinLobby(userId, courseId) {
+    console.log("Joining Lobby...");
     const userStatusRef = databaseRef(database, `lobbies/${courseId}/${userId}`);
-    get(userStatusRef)
-      .then((snapshot) => {
-        if (!snapshot.exists()) {
-          set(userStatusRef, {
-            online: true,
-          });
-        }
-      })
-      .catch((error) => {
-        console.error("Error getting data:", error);
-      });
+    try {
+      await set(userStatusRef, defaultStatuses);
   
-    onDisconnect(userStatusRef).remove();
+      // Set up onDisconnect to handle user disconnecting --> removes their statuses from DB
+      try {
+        await onDisconnect(userStatusRef).remove();
+        console.log("onDisconnect handler set successfully.");
+      } catch (error) {
+        console.error("Error setting onDisconnect handler:", error);
+      }
+  
+      console.log("Joined new course Lobby.");
+    } catch (error) {
+      console.error("Error getting data:", error);
+    }
   };
 
-  const leaveLobby = (userId, courseId) => {
+  async function leaveLobby(userId, courseId) {
     const userStatusRef = databaseRef(database, `lobbies/${courseId}/${userId}`);
-    remove(userStatusRef);
+    await remove(userStatusRef);
   };
 
-  const updateActiveCourse = async (courseId) => {
-    if (!userId) return;
+  async function updateActiveCourse(courseId) {
+    if (!userId) {
+      console.log("!userId");
+      return;
+    }
 
-    // Leave the current lobby if there's an active course
+    // Leave the current lobby if there's an active course selected
     if (activeCourse) {
-      leaveLobby(userId, activeCourse.id);
+      await leaveLobby(userId, activeCourse.id);
     }
 
     const userDocRef = doc(firestore, 'users', userId);
@@ -93,7 +105,7 @@ export function useActiveCourse() {
 
     const courseDocRef = doc(firestore, 'courses', courseId);
     const courseDoc = await getDoc(courseDocRef);
-
+    console.log("courseDoc: ", courseDoc);
     if (courseDoc.exists()) {
       const courseData = courseDoc.data();
       const imageUrl = await getDownloadURL(storageRef(storage, courseData.image_path));
@@ -102,12 +114,14 @@ export function useActiveCourse() {
         ...courseData,
         imageUrl
       };
-      setActiveCourse(newActiveCourse);
-
+      console.log("newActiveCourse: ", newActiveCourse);
       // Join the new lobby
-      joinLobby(userId, courseId);
+      await joinLobby(userId, courseId);
+      setActiveCourse(newActiveCourse);
+    } else {
+      console.error("Error while loading new course data.")
     }
-  };
+  }
 
-  return { activeCourse, loading, updateActiveCourse };
+  return { activeCourse, loading, updateActiveCourse, joinLobby };
 }

@@ -4,18 +4,44 @@ import { doc, getDoc } from 'firebase/firestore';
 import { useFirebase } from '../useFirebase';
 import { Typography, Paper, Box, List, ListItem, ListItemText, Divider, Button } from '@mui/material';
 import Grid from '@mui/material/Grid2';
-import { useUserStatuses } from '../User/useUserStatuses';
+import { remove, set, ref as databaseRef } from 'firebase/database';
+import { useActiveCourse } from '../User/useActiveCourse';
 
 export default function Results() {
   const { gameId } = useParams();
-  const { firestore, auth } = useFirebase();
+  const { firestore, database, auth } = useFirebase();
   const [gameData, setGameData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [seconds, setSeconds] = useState(0);
   const [minutes, setMinutes] = useState(0);
-  const { exitPrivateLobby } = useUserStatuses();
   const navigate = useNavigate();
+  const { activeCourse } = useActiveCourse();
+
+
+  const exitPrivateLobby = useCallback(
+    (privateLobbyId) => {
+      const defaultStatuses = {
+        online: true,
+        coop: false,
+        competition: false,
+        matching_user_id: null,
+        game_id: null,
+      };
+      if (!privateLobbyId) return;
+      // Remove private lobby
+      const privateLobbyRef = databaseRef(database, `private_lobbies/${privateLobbyId}`);
+      remove(privateLobbyRef).catch((error) =>
+        console.error("Error removing private lobby:", error)
+      );
+      // Reset user status
+      const userStatusRef = databaseRef(database, `lobbies/${activeCourse?.id}/${auth.currentUser.uid}`);
+      set(userStatusRef, defaultStatuses).catch((error) =>
+        console.error("Error resetting user status:", error)
+      );
+    },
+    [database, activeCourse?.id, auth?.currentUser?.uid]
+  );
 
   const handleExit = useCallback(async () => {
     try {

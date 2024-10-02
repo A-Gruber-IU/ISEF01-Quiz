@@ -1,20 +1,34 @@
 import { useNavigate } from 'react-router-dom';
 import GamePlay from "./GamePlay";
 import { useActiveCourse } from '../User/useActiveCourse';
-import { useUserStatuses, defaultStatuses } from '../User/useUserStatuses';
 import { useFirebase } from '../useFirebase';
 import { setDoc, serverTimestamp as serverTimestampFS, doc, deleteDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
+import { set, ref as databaseRef } from 'firebase/database';
 
 export default function SingleGame() {
-    const { auth, firestore } = useFirebase();
+    const { auth, firestore, database } = useFirebase();
     const activeUser = auth.currentUser;
     const { activeCourse } = useActiveCourse();
     const [gameInit, setGameInit] = useState(false);
     const navigate = useNavigate();
     const [isExitDialogOpen, setIsExitDialogOpen] = useState(false);
-    const { handleStatusChange } = useUserStatuses();
+
+    const defaultStatuses = {
+        online: true,
+        coop: false,
+        competition: false,
+        matching_user_id: null,
+        game_id: null,
+      };
+
+    async function initializeStatus() {
+        const userStatusRef = databaseRef(database, `lobbies/${activeCourse.id}/${activeUser.uid}`);
+        let newStatuses = { ...defaultStatuses, game_id: activeUser.uid };
+        await set(userStatusRef, newStatuses);
+    }
+    initializeStatus();
 
     // Create a new game in firestore
     useEffect(() => {
@@ -36,20 +50,15 @@ export default function SingleGame() {
                     console.error("Error initializing game.", error.message)
                 }
             }
-
-            async function updateStatuses() {
-                let newStatuses = { ...defaultStatuses, game_id: activeUser.uid };
-                await handleStatusChange(newStatuses);
-            }
             newGameInFS();
-            updateStatuses();
         }
-    }, [activeCourse, activeUser, firestore, handleStatusChange]);
+    }, [activeCourse, activeUser, database, firestore]);
 
 
     async function handleExit() {
         try {
-            await handleStatusChange(defaultStatuses);
+            const userStatusRef = databaseRef(database, `lobbies/${activeCourse.id}/${activeUser.uid}`);
+            await set(userStatusRef, defaultStatuses);
             const gameRef = doc(firestore, 'game_data', activeUser.uid);
             await deleteDoc(gameRef);
             navigate('/');
@@ -91,7 +100,7 @@ export default function SingleGame() {
                     </DialogTitle>
                     <DialogContent>
                         <DialogContentText id="alert-dialog-description">
-                            Bist du sicher, dass du das Spiel verlassen möchtest? Dies beendet das Spiel für beide Spieler.
+                            Bist du sicher, dass du das Spiel verlassen möchtest?
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions>

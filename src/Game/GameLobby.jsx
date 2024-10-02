@@ -1,12 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useBeforeUnload } from 'react-router-dom';
-import { ref as databaseRef, onValue, get } from 'firebase/database';
+import { ref as databaseRef, onValue, get, remove, set } from 'firebase/database';
 import { deleteDoc, doc, getDoc } from 'firebase/firestore';
 import { Box, Typography, Button, Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { useFirebase } from '../useFirebase';
 import PrivateChat from './PrivateChat';
 import { useActiveCourse } from '../User/useActiveCourse';
-import { useUserStatuses } from '../User/useUserStatuses';
 import GamePlay from './GamePlay';
 
 export default function GameLobby({ gameType, gameId }) {
@@ -19,9 +18,7 @@ export default function GameLobby({ gameType, gameId }) {
   const [error, setError] = useState(null);
   const [isExitDialogOpen, setIsExitDialogOpen] = useState(false);
   const activeUser = auth.currentUser;
-
   const { activeCourse } = useActiveCourse();
-  const { exitPrivateLobby } = useUserStatuses();
 
   useEffect(() => {
     const privateLobbyRef = databaseRef(database, `private_lobbies/${gameId}`);
@@ -80,6 +77,30 @@ export default function GameLobby({ gameType, gameId }) {
     };
   }, [gameId, database, firestore, auth, navigate, activeUser.uid]);
 
+  const exitPrivateLobby = useCallback(
+    (privateLobbyId) => {
+      const defaultStatuses = {
+        online: true,
+        coop: false,
+        competition: false,
+        matching_user_id: null,
+        game_id: null,
+      };
+      if (!privateLobbyId) return;
+      // Remove private lobby
+      const privateLobbyRef = databaseRef(database, `private_lobbies/${privateLobbyId}`);
+      remove(privateLobbyRef).catch((error) =>
+        console.error("Error removing private lobby:", error)
+      );
+      // Reset user status
+      const userStatusRef = databaseRef(database, `lobbies/${activeCourse?.id}/${activeUser.uid}`);
+      set(userStatusRef, defaultStatuses).catch((error) =>
+        console.error("Error resetting user status:", error)
+      );
+    },
+    [database, activeCourse?.id, activeUser?.uid]
+  );
+
   const handleExit = useCallback(async () => {
     try {
       exitPrivateLobby(gameId);
@@ -96,9 +117,12 @@ export default function GameLobby({ gameType, gameId }) {
   }, [exitPrivateLobby, firestore, gameId, navigate]);
 
   const openExitDialog = useCallback(() => {
-    setIsExitDialogOpen(true);
-  }, []);
-
+    if (alert == "Der andere Spieler hat das Spiel beendet.") {
+      handleExit();
+    } else {
+      setIsExitDialogOpen(true);
+    }
+  }, [alert, handleExit]);
   const closeExitDialog = useCallback(() => {
     setIsExitDialogOpen(false);
   }, []);
