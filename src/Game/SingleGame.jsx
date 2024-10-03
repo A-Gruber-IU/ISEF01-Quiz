@@ -15,13 +15,7 @@ export default function SingleGame() {
     const navigate = useNavigate();
     const [isExitDialogOpen, setIsExitDialogOpen] = useState(false);
 
-    const defaultStatuses = {
-        online: true,
-        coop: false,
-        competition: false,
-        matching_user_id: null,
-        game_id: null,
-      };
+    const defaultStatuses = { online: true, coop: false, competition: false, matching_user_id: null, game_id: null };
 
     async function initializeStatus() {
         const userStatusRef = databaseRef(database, `lobbies/${activeCourse.id}/${activeUser.uid}`);

@@ -79,13 +79,7 @@ export default function GameLobby({ gameType, gameId }) {
 
   const exitPrivateLobby = useCallback(
     (privateLobbyId) => {
-      const defaultStatuses = {
-        online: true,
-        coop: false,
-        competition: false,
-        matching_user_id: null,
-        game_id: null,
-      };
+      const defaultStatuses = { online: true, coop: false, competition: false, matching_user_id: null, game_id: null };
       if (!privateLobbyId) return;
       // Remove private lobby
       const privateLobbyRef = databaseRef(database, `private_lobbies/${privateLobbyId}`);

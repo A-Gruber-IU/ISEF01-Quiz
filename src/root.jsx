@@ -1,5 +1,5 @@
-import { Outlet, useNavigation } from 'react-router-dom';
-import { useState, useEffect, useCallback } from 'react';
+import { Outlet, useLocation, useNavigation } from 'react-router-dom';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Container } from '@mui/material';
 import BottomNav from './Layout/BottomNav';
 import TopNav from './Layout/TopNav';
@@ -8,8 +8,8 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 import { connectAuthEmulator, signOut } from "firebase/auth";
-import { connectFirestoreEmulator, getDoc, doc } from "firebase/firestore";
-import { connectDatabaseEmulator, ref as databaseRef, remove, onDisconnect, get } from "firebase/database";
+import { connectFirestoreEmulator, getDoc, doc, deleteDoc } from "firebase/firestore";
+import { connectDatabaseEmulator, ref as databaseRef, remove, onDisconnect, get, onValue, set } from "firebase/database";
 import { connectStorageEmulator } from 'firebase/storage';
 
 import { useFirebase } from './useFirebase';
@@ -71,6 +71,10 @@ export default function Root() {
     const { auth, app, firestore, database, storage } = useFirebase();
     const { activeCourse } = useActiveCourse();
 
+    const location = useLocation();
+    const previousLocation = useRef(location);
+
+
     useEffect(() => {
         if (isDevelopment) {
             connectAuthEmulator(auth, "http://localhost:9099", { disableWarnings: false });
@@ -86,35 +90,76 @@ export default function Root() {
         }
     }, [app, auth, database, firestore, storage]);
 
+
+    // Make sure user status is reset when navigating away from lobby or game to avoid inconsistencies
     useEffect(() => {
-        if (activeUser && activeCourse) {
+        const defaultStatuses = { online: true, coop: false, competition: false, matching_user_id: null, game_id: null };
+        async function resetStatus() {
+            if (!activeCourse || !activeUser) return;
             const userStatusRef = databaseRef(database, `lobbies/${activeCourse.id}/${activeUser.uid}`);
-            async function fetchStatus() {
-                const snap = await get(userStatusRef);
-                return snap;
-            }
-            const userStatusSnap = fetchStatus();
-            onDisconnect(userStatusRef).remove();
-
-            // If the user has an active game, set up onDisconnect for that as well
-            if (userStatusSnap?.status?.game_id) {
-                const gameRef = databaseRef(database, `private_lobbies/${userStatusSnap?.status.game_id}`);
-                onDisconnect(gameRef).remove();
-            }
-
-            return () => {
-                // Clear the onDisconnect operations when the component unmounts
-                onDisconnect(userStatusRef).cancel();
-                if (userStatusSnap?.status.game_id) {
-                    onDisconnect(databaseRef(database, `private_lobbies/${userStatusSnap?.status.game_id}`)).cancel();
-                }
-            };
+            await set(userStatusRef, defaultStatuses);
         }
-    }, [activeUser, activeCourse, database]);
+        async function deleteGameData(gameId) {
+            const gameRef = doc(firestore, 'game_data', gameId);
+            const docSnap = await getDoc(gameRef);
+            if (docSnap.exists()) {
+                await deleteDoc(gameRef);
+            }
+        }
+        async function exitPrivateLobby(privateLobbyId) {
+            if (!privateLobbyId) return;
+            // Remove private lobby
+            const privateLobbyRef = databaseRef(database, `private_lobbies/${privateLobbyId}`);
+            remove(privateLobbyRef).catch((error) =>
+                console.error("Error removing private lobby:", error)
+            );
+            resetStatus();
+        }
+
+        if (previousLocation.current.pathname === "/" && location.pathname !== "/") {
+            resetStatus();
+        }
+        if (previousLocation.current.pathname.startsWith("/coop") && !location.pathname.startsWith("/coop")) {
+            const gameId = previousLocation.current.pathname.slice(6)
+            exitPrivateLobby(gameId);
+            deleteGameData(gameId);
+        }
+        if (previousLocation.current.pathname.startsWith("/competition") && !location.pathname.startsWith("/competition")) {
+            const gameId = previousLocation.current.pathname.slice(12)
+            exitPrivateLobby(gameId);
+            deleteGameData(gameId);
+        }
+        
+        previousLocation.current = location;
+    }, [location, activeCourse, activeUser, database, firestore]);
+
+
+    useEffect(() => {
+        if (!activeUser || !activeCourse) return;
+        const userStatusRef = databaseRef(database, `lobbies/${activeCourse.id}/${activeUser.uid}`);
+        // Sets up a listener for user status changes in realtime database
+        const getUserStatus = onValue(userStatusRef, async (snapshot) => {
+            console.log("onValue listener for user status set up.");
+            if (snapshot.exists()) {
+                const userStatus = snapshot.val();
+                console.log("userStatus (root): ", userStatus)
+                onDisconnect(userStatusRef).remove();
+                if (userStatus?.game_id) {
+                    const gameRef = databaseRef(database, `private_lobbies/${userStatus?.game_id}`);
+                    onDisconnect(gameRef).remove();
+                }
+            }
+        });
+        return () => {
+            getUserStatus();
+        };
+    }, [activeCourse, activeUser, database]);
+
 
     useEffect(() => {
         console.log("New activeUser:", activeUser);
     }, [activeUser]);
+
 
     // Logout function is passed on to menu drawer in top nav bar for logout button
     const handleLogout = useCallback(async () => {

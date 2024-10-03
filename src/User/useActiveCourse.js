@@ -9,13 +9,7 @@ export function useActiveCourse() {
   const [loading, setLoading] = useState(true);
   const { storage, firestore, database, auth } = useFirebase();
   const userId = auth?.currentUser?.uid;
-  const defaultStatuses = {
-    online: true,
-    coop: false,
-    competition: false,
-    matching_user_id: null,
-    game_id: null,
-  };
+  const defaultStatuses = { online: true, coop: false, competition: false, matching_user_id: null, game_id: null };
 
   useEffect(() => {
     async function fetchActiveCourse() {

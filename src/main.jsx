@@ -61,7 +61,7 @@ const router = createBrowserRouter([
         element: <SubmitQuestion />,
       },
       {
-        path: "/reviewquestion",
+        path: "reviewquestion",
         element: <ReviewQuestion />,
       },
       {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { doc, getDoc, serverTimestamp as serverTimestampFS, setDoc } from 'firebase/firestore';
 import { ref as databaseRef, onValue, set, push, get, remove, serverTimestamp as serverTimestampDB } from 'firebase/database';
 import { NavLink, useNavigate } from 'react-router-dom';
@@ -24,16 +24,8 @@ export default function Lobby() {
   const [loading, setLoading] = useState(true);
   const [courseId, setCourseId] = useState(null);
   const navigate = useNavigate();
-  const defaultStatuses = {
-    online: true,
-    coop: false,
-    competition: false,
-    matching_user_id: null,
-    game_id: null,
-  };
+  const defaultStatuses = { online: true, coop: false, competition: false, matching_user_id: null, game_id: null };
   const [currentUserStatuses, setCurrentUserStatuses] = useState(defaultStatuses);
-
-console.log("rerender")
 
   function handleChangeCourse(courseId) {
     updateActiveCourse(courseId);
