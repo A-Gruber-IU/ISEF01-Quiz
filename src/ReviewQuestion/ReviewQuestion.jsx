@@ -15,6 +15,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  arrayUnion,
   getDoc,
   getDocs,
   query,
@@ -94,6 +95,9 @@ const ReviewQuestion = () => {
           reviewed: true,
           reviewerID: user?.uid,
         });
+        const questionId = questionRef.id;
+        const indexRef = doc(firestore, "courses", selectedCourse, "questions/index_reviewed");
+        await updateDoc(indexRef, { "indices": arrayUnion(questionId) });
         const filteredQuestions = questions.filter(
           (element, index) => index !== currentPage
         );
