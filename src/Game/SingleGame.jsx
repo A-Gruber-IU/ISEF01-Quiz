@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import GamePlay from "./GamePlay";
 import { useActiveCourse } from '../User/useActiveCourse';
 import { useFirebase } from '../useFirebase';
-import { setDoc, serverTimestamp as serverTimestampFS, doc, deleteDoc } from "firebase/firestore";
+import { serverTimestamp as serverTimestampFS, doc, deleteDoc, addDoc, collection } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
 import { set, ref as databaseRef } from 'firebase/database';
@@ -12,25 +12,18 @@ export default function SingleGame() {
     const activeUser = auth.currentUser;
     const { activeCourse } = useActiveCourse();
     const [gameInit, setGameInit] = useState(false);
+    const [gameId, setGameId] = useState();
     const navigate = useNavigate();
     const [isExitDialogOpen, setIsExitDialogOpen] = useState(false);
 
     const defaultStatuses = { online: true, coop: false, competition: false, matching_user_id: null, game_id: null };
 
-    async function initializeStatus() {
-        const userStatusRef = databaseRef(database, `lobbies/${activeCourse.id}/${activeUser.uid}`);
-        let newStatuses = { ...defaultStatuses, game_id: activeUser.uid };
-        await set(userStatusRef, newStatuses);
-    }
-    initializeStatus();
-
     // Create a new game in firestore
     useEffect(() => {
-        if (activeUser && activeCourse) {
+        if (activeUser && activeCourse && !gameInit) {
             async function newGameInFS() {
                 try {
-                    const gameDataRef = doc(firestore, `game_data`, activeUser.uid);
-                    await setDoc(gameDataRef, {
+                    const gameDataRef = await addDoc(collection(firestore, "game_data"), {
                         player1: {
                             uid: activeUser.uid,
                             name: activeUser.displayName,
@@ -38,6 +31,7 @@ export default function SingleGame() {
                         game_mode: "single",
                         start_time: serverTimestampFS()
                     });
+                    setGameId(gameDataRef.id);
                     setGameInit(true);
                     console.log("Game initilized.")
                 } catch (error) {
@@ -46,8 +40,14 @@ export default function SingleGame() {
             }
             newGameInFS();
         }
-    }, [activeCourse, activeUser, database, firestore]);
+    }, [activeCourse, activeUser, database, firestore, gameInit]);
 
+    async function initializeStatus() {
+        const userStatusRef = databaseRef(database, `lobbies/${activeCourse.id}/${activeUser.uid}`);
+        let newStatuses = { ...defaultStatuses, game_id: gameId };
+        await set(userStatusRef, newStatuses);
+    }
+    initializeStatus();
 
     async function handleExit() {
         try {
@@ -79,7 +79,7 @@ export default function SingleGame() {
         console.log("Starting game.")
         return (
             <>
-                <GamePlay courseId={activeCourse?.id} gameId={activeUser?.uid} />
+                <GamePlay courseId={activeCourse?.id} gameId={gameId} />
                 <Button sx={{ mt: 2 }} variant="contained" color="warning" onClick={openExitDialog}>
                     Spiel verlassen
                 </Button>

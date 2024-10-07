@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { useFirebase } from '../useFirebase';
 import { Typography, Paper, Box, List, ListItem, ListItemText, Divider, Button } from '@mui/material';
 import Grid from '@mui/material/Grid2';
@@ -15,6 +15,7 @@ export default function Results() {
   const [error, setError] = useState(null);
   const [seconds, setSeconds] = useState(0);
   const [minutes, setMinutes] = useState(0);
+  const [fullTime, setFullTime] = useState(0);
   const navigate = useNavigate();
   const { activeCourse } = useActiveCourse();
 
@@ -48,6 +49,7 @@ export default function Results() {
   }, [exitPrivateLobby, gameId, navigate]);
 
   useEffect(() => {
+    // Get game data for display
     async function fetchGameData() {
       try {
         const gameRef = doc(firestore, 'game_data', gameId);
@@ -61,6 +63,7 @@ export default function Results() {
           console.log("start_time", start_time)
           let timeTaken = end_time.toDate().getTime() - start_time.toDate().getTime();
           console.log("timeTaken", timeTaken)
+          setFullTime(timeTaken);
           setMinutes(Math.floor(timeTaken / 60000));
           setSeconds(((timeTaken % 60000) / 1000).toFixed(0));
         } else {
@@ -73,9 +76,11 @@ export default function Results() {
         setLoading(false);
       }
     }
-
     fetchGameData();
   }, [gameId, firestore]);
+
+
+
 
   if (loading) {
     return <Typography>Lade Ergebnisse...</Typography>;
@@ -108,6 +113,54 @@ export default function Results() {
     }
   }, 0);
 
+  // Write game data to the user's stats
+  async function writeToStats() {
+    try {
+      const courseStatsRef = doc(firestore, `users/${auth.currentUser.uid}/game_stats/`, activeCourse.id);
+      const courseStatsSnap = await getDoc(courseStatsRef);
+      const gameStats = () => {
+        let stats = {
+          "game_id": gameId,
+          "end_time": gameData.end_time,
+          "score": correctAnswers,
+          "time": fullTime
+        }
+        if (gameMode == "competition" && correctAnswers > correctAnswersOpponent) {
+          return ({ ...stats, "outcome": "winner", })
+        } else if (gameMode == "competition" && correctAnswers == correctAnswersOpponent) {
+          return ({ ...stats, "outcome": "draw", })
+        } else {
+          return stats
+        }
+      }
+      const stats = gameStats();
+      console.log("stats", stats)
+      console.log("gameMode", gameMode)
+
+    if (courseStatsSnap.exists()) {
+      const gameModeMap = courseStatsSnap.data().gameMode || {};
+
+      // Update the document with the new data
+      await updateDoc(courseStatsRef, {
+        // Use the gameMode variable as the key
+        [gameMode]: { ...gameModeMap, [gameId]: stats } 
+      });
+      console.log("Stats written successfully!");
+      return true;
+    } else {
+      // Document doesn't exist, create it with the new data
+      await setDoc(courseStatsRef, {
+        // Use the gameMode variable as the key
+        [gameMode]: { [gameId]: stats } 
+      });
+      console.log("Stats written successfully!");
+    }
+  } catch (error) {
+    console.error("Error writing document: ", error);
+  }
+};
+  writeToStats();
+
   console.log("correctAnswers", correctAnswers);
   console.log("questions", questions);
   console.log("currentPlayerAnswers", currentPlayerAnswers);
@@ -116,49 +169,64 @@ export default function Results() {
     return (
       <Paper elevation={3} sx={{ p: 3, maxWidth: 800, mx: 'auto', my: 4 }}>
         <Grid size={{ xs: 12 }} sx={{ mb: 3 }} container spacing={2}>
-        {gameMode === 'single' && (
+          {gameMode === 'single' && (
             <Grid size={{ xs: 12 }} >
               <Typography
-              variant="h5"
-              noWrap
-              gutterBottom
-              className='iuHeadline1'
-              sx={{
-                fontWeight: 700
-              }}
-            >
-              DEIN ERGEBNIS
-            </Typography>
+                variant="h5"
+                noWrap
+                gutterBottom
+                className='iuHeadline1'
+                sx={{
+                  fontWeight: 700
+                }}
+              >
+                DEIN ERGEBNIS
+              </Typography>
             </Grid>
           )}
           {(gameMode === 'competition' && correctAnswers > correctAnswersOpponent) && (
             <Grid size={{ xs: 12 }} >
               <Typography
-              variant="h5"
-              noWrap
-              gutterBottom
-              className='iuHeadline2'
-              sx={{
-                fontWeight: 700
-              }}
-            >
-              GLÜCKWUNSCH, GEWONNEN!
-            </Typography>
+                variant="h5"
+                noWrap
+                gutterBottom
+                className='iuHeadline2'
+                sx={{
+                  fontWeight: 700
+                }}
+              >
+                GLÜCKWUNSCH, GEWONNEN!
+              </Typography>
             </Grid>
           )}
           {(gameMode === 'competition' && correctAnswers < correctAnswersOpponent) && (
             <Grid size={{ xs: 12 }} >
               <Typography
-              variant="h5"
-              noWrap
-              gutterBottom
-              className='iuHeadline1'
-              sx={{
-                fontWeight: 700
-              }}
-            >
-              DER LERNERFOLG ZÄHLT!
-            </Typography>
+                variant="h5"
+                noWrap
+                gutterBottom
+                className='iuHeadline1'
+                sx={{
+                  fontWeight: 700
+                }}
+              >
+                DER LERNERFOLG ZÄHLT!
+              </Typography>
+            </Grid>
+          )}
+          {(gameMode === 'competition' && correctAnswers == correctAnswersOpponent) && (
+            <Grid size={{ xs: 12 }} >
+              <Typography
+                variant="h5"
+                noWrap
+                gutterBottom
+                className='iuHeadline1'
+                sx={{
+                  fontWeight: 700
+                }}
+              >
+                UNENTSCHIEDEN!
+              </Typography>
             </Grid>
           )}
           {gameMode !== 'competition' && (

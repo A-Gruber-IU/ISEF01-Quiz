@@ -117,6 +117,7 @@ export default function GameLobby({ gameType, gameId }) {
       setIsExitDialogOpen(true);
     }
   }, [alert, handleExit]);
+  
   const closeExitDialog = useCallback(() => {
     setIsExitDialogOpen(false);
   }, []);

@@ -1,4 +1,4 @@
-import { Outlet, useLocation, useNavigation } from 'react-router-dom';
+import { Outlet, useNavigation } from 'react-router-dom';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Container } from '@mui/material';
 import BottomNav from './Layout/BottomNav';
@@ -8,12 +8,13 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 import { connectAuthEmulator, signOut } from "firebase/auth";
-import { connectFirestoreEmulator, getDoc, doc, deleteDoc } from "firebase/firestore";
+import { connectFirestoreEmulator, getDoc, doc } from "firebase/firestore";
 import { connectDatabaseEmulator, ref as databaseRef, remove, onDisconnect, get, onValue, set } from "firebase/database";
 import { connectStorageEmulator } from 'firebase/storage';
 
 import { useFirebase } from './useFirebase';
 import { useActiveCourse } from './User/useActiveCourse';
+import NavigationHandler from './NavigationHandler';
 
 const iuTheme = createTheme({
     colorSchemes: {
@@ -71,10 +72,6 @@ export default function Root() {
     const { auth, app, firestore, database, storage } = useFirebase();
     const { activeCourse } = useActiveCourse();
 
-    const location = useLocation();
-    const previousLocation = useRef(location);
-
-
     useEffect(() => {
         if (isDevelopment) {
             connectAuthEmulator(auth, "http://localhost:9099", { disableWarnings: false });
@@ -89,49 +86,6 @@ export default function Root() {
             });
         }
     }, [app, auth, database, firestore, storage]);
-
-
-    // Make sure user status is reset when navigating away from lobby or game to avoid inconsistencies
-    useEffect(() => {
-        const defaultStatuses = { online: true, coop: false, competition: false, matching_user_id: null, game_id: null };
-        async function resetStatus() {
-            if (!activeCourse || !activeUser) return;
-            const userStatusRef = databaseRef(database, `lobbies/${activeCourse.id}/${activeUser.uid}`);
-            await set(userStatusRef, defaultStatuses);
-        }
-        async function deleteGameData(gameId) {
-            const gameRef = doc(firestore, 'game_data', gameId);
-            const docSnap = await getDoc(gameRef);
-            if (docSnap.exists()) {
-                await deleteDoc(gameRef);
-            }
-        }
-        async function exitPrivateLobby(privateLobbyId) {
-            if (!privateLobbyId) return;
-            // Remove private lobby
-            const privateLobbyRef = databaseRef(database, `private_lobbies/${privateLobbyId}`);
-            remove(privateLobbyRef).catch((error) =>
-                console.error("Error removing private lobby:", error)
-            );
-            resetStatus();
-        }
-
-        if (previousLocation.current.pathname === "/" && location.pathname !== "/") {
-            resetStatus();
-        }
-        if (previousLocation.current.pathname.startsWith("/coop") && !location.pathname.startsWith("/coop")) {
-            const gameId = previousLocation.current.pathname.slice(6)
-            exitPrivateLobby(gameId);
-            deleteGameData(gameId);
-        }
-        if (previousLocation.current.pathname.startsWith("/competition") && !location.pathname.startsWith("/competition")) {
-            const gameId = previousLocation.current.pathname.slice(12)
-            exitPrivateLobby(gameId);
-            deleteGameData(gameId);
-        }
-        
-        previousLocation.current = location;
-    }, [location, activeCourse, activeUser, database, firestore]);
 
 
     useEffect(() => {
@@ -184,10 +138,9 @@ export default function Root() {
 
 
     if (activeUser) {
-
-
         return (
             <ThemeProvider theme={iuTheme}>
+                <NavigationHandler />
                 <TopNav onLogout={handleLogout} />
                 <div
                     id="mainView"

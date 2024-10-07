@@ -68,7 +68,6 @@ export default function Lobby() {
         // Find own active user reference
         const activeUserDB = users.find(user => user.uid === activeUser.uid);
         setCurrentUserStatuses(activeUserDB.statuses);
-        console.log("activeUserDB.statuses", activeUserDB.statuses)
 
         // Check if there is a game smatch among users
         const matchingUser = users.find(user =>
