@@ -56,20 +56,28 @@ const ReviewQuestion = () => {
   };
 
   const handleFetchQuestions = async (e) => {
-    setSelectedCourse(e.target.value);
+    const courseId = e.target.value; // Verwende direkt den ausgewählten Kurs
+    setSelectedCourse(courseId); // Kurs speichern
+    setCurrentPage(0); // Setze die Seite auf 0 zurück
+
     try {
       const queryForQuestionsForReview = query(
-        collection(doc(firestore, "courses", e.target.value), "questions"),
+        collection(doc(firestore, "courses", courseId), "questions"),
         where("reviewed", "!=", true)
       );
+
       const questionsDocs = await getDocs(queryForQuestionsForReview);
+
       if (!questionsDocs.empty) {
         const questions = [];
         for (const question of questionsDocs.docs) {
           questions.push({ ...question.data(), id: question.id });
         }
-        setQuestions(questions);
-        setCurrentQuestion([questions[currentPage]]);
+        setQuestions(questions); // Setze die neuen Fragen
+        setCurrentQuestion([questions[0]]); // Setze die erste Frage im aktuellen Kurs
+      } else {
+        setQuestions([]); // Keine Fragen gefunden
+        setCurrentQuestion([]); // Leere aktuelle Frage
       }
     } catch (error) {
       toast.error(error.code.replace(/[/-]/g, " "));
@@ -89,15 +97,20 @@ const ReviewQuestion = () => {
       const docSnap = await getDoc(questionRef);
       const data = docSnap.data();
       if (data.authorId == user?.uid) {
-        toast.error("Du kannst nicht deine eigenen Fragen reviewen.")
+        toast.error("Du kannst nicht deine eigenen Fragen reviewen.");
       } else {
         await updateDoc(questionRef, {
           reviewed: true,
           reviewerID: user?.uid,
         });
         const questionId = questionRef.id;
-        const indexRef = doc(firestore, "courses", selectedCourse, "questions/index_reviewed");
-        await updateDoc(indexRef, { "indices": arrayUnion(questionId) });
+        const indexRef = doc(
+          firestore,
+          "courses",
+          selectedCourse,
+          "questions/index_reviewed"
+        );
+        await updateDoc(indexRef, { indices: arrayUnion(questionId) });
         const filteredQuestions = questions.filter(
           (element, index) => index !== currentPage
         );
@@ -130,7 +143,7 @@ const ReviewQuestion = () => {
       const docSnap = await getDoc(questionRef);
       const data = docSnap.data();
       if (data.authorId == user?.uid) {
-        toast.error("Du kannst nicht deine eigenen Fragen reviewen.")
+        toast.error("Du kannst nicht deine eigenen Fragen reviewen.");
       } else {
         await deleteDoc(questionRef);
 
@@ -188,7 +201,7 @@ const ReviewQuestion = () => {
           fontWeight: 600,
         }}
       >
-        SCHICKE UNS EINE FRAGE.
+        PRÜFE EINGEREICHTE FRAGEN.
       </Typography>
       <FormControl required fullWidth sx={{ marginBottom: 2 }}>
         <InputLabel id="selectedCourse">
@@ -228,7 +241,6 @@ const ReviewQuestion = () => {
                   ]}
                   correctAnswer={question?.correct_answer || "Keine Antwort"}
                 />
-                ;
                 <ButtonGroup
                   sx={{
                     display: "flex",
@@ -289,7 +301,6 @@ const ReviewQuestion = () => {
                     Frage ablehnen
                   </Button>
                 </Box>
-                ;
               </>
             );
           })}
