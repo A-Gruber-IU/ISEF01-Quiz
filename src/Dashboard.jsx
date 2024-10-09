@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useActiveCourse } from "./User/useActiveCourse";
 import { useFirebase } from "./useFirebase";
 import { ActiveCourseDisplay } from "./Startpage/ActiveCourseDisplay";
-import { BarChart } from "@mui/x-charts";
+import { BarChart, PieChart } from "@mui/x-charts";
 import { Card, CardContent, Typography } from '@mui/material';
 import Grid from "@mui/material/Grid2";
 import "@fontsource/source-sans-pro/700.css";
@@ -62,11 +62,27 @@ export default function Dashboard() {
     const avgScore = games.reduce((sum, game) => sum + game.score, 0) / games.length;
     const highestScore = Math.max(...games.map(game => game.score));
 
-    return { chartData, avgScore, highestScore };
+    let outcomeData = [];
+
+    if (mode === "competition") {
+      const outcomeCount = sortedGames.reduce((acc, game) => {
+        acc[game.outcome] = (acc[game.outcome] || 0) + 1;
+        return acc;
+      }, {});
+
+      outcomeData = [
+        { id: 0, value: outcomeCount.winner || 0, label: 'gewonnen' },
+        { id: 1, value: outcomeCount.draw || 0, label: 'unentschieden' },
+        { id: 2, value: outcomeCount.loser || 0, label: 'verloren' },
+      ];
+      console.log("outcomeData", outcomeData);
+    }
+
+    return { chartData, avgScore, highestScore, outcomeData };
   };
 
   const renderGameModeStats = (mode) => {
-    const { chartData, avgScore, highestScore } = processGameStats(mode);
+    const { chartData, avgScore, highestScore, outcomeData } = processGameStats(mode);
     console.log("Mode:", mode);
     console.log("chartData:", chartData);
 
@@ -77,14 +93,20 @@ export default function Dashboard() {
           {!chartData || chartData.length == 0 ? <Grid><Typography> Noch keine Daten zur Anzeige. </Typography></Grid> : <>
             <Grid container size={{ xs: 12 }}>
               <Grid container size={{ xs: 12 }}>
-                <Grid size={{ xs: 3, md: 2 }}><Typography>Punkte-Ø:</Typography></Grid>
+                <Grid size={{ xs: 4, md: 3, lg: 2 }}><Typography>Punkte-Ø:</Typography></Grid>
                 <Grid><Typography sx={{ fontWeight: "bold" }}> {avgScore.toFixed(2)}</Typography></Grid>
               </Grid>
               <Grid container size={{ xs: 12 }}>
-                <Grid size={{ xs: 3, md: 2 }}><Typography>Highscore: </Typography></Grid>
+                <Grid size={{ xs: 4, md: 3, lg: 2 }}><Typography>Highscore: </Typography></Grid>
                 <Grid><Typography sx={{ fontWeight: "bold" }}>{highestScore}</Typography></Grid>
               </Grid>
-            </Grid><Grid container spacing={2} size={{ xs: 12 }} marginTop={3}>
+              <Grid size={{ xs: 12 }} sx={{ mt: 2 }}>
+                <Typography>
+                  {chartData.length == 1 ? `Letztes Spiel:` : `Übersicht der letzten ${chartData.length} Spiele:`}
+                </Typography>
+              </Grid>
+            </Grid>
+            <Grid container spacing={2} size={{ xs: 12 }} marginTop={3}>
               <Grid size={{ xs: 12, md: 6 }}>
                 <Grid textAlign={"center"}>
                   <Typography sx={{ fontWeight: "bold" }}>Punktestände</Typography>
@@ -103,6 +125,8 @@ export default function Dashboard() {
                         max: 10,
                         color: ['#b71c1c', '#d4e157'],
                       },
+                      min: 0,
+                      max: 10,
                       valueFormatter: (gamescore, context) => context.location === 'tick'
                         ? gamescore
                         : `${gamescore} Punkte`,
@@ -111,8 +135,12 @@ export default function Dashboard() {
                       dataKey: 'score',
                       label: 'Punkte',
                       valueFormatter: (v, { dataIndex }) => {
+                        if (!chartData) { return `${v}`; }
+                        if (!chartData[dataIndex]) { return `${v}`; }
                         const { outcome } = chartData[dataIndex];
-                        if (outcome == 'won') {
+                        if (!outcome) {
+                          return `${v}`;
+                        } else if (outcome == 'won') {
                           return `${v} (gewonnen)`;
                         } else if (outcome == 'draw') {
                           return `${v} (unentschieden)`;
@@ -158,6 +186,19 @@ export default function Dashboard() {
                   borderRadius={8} />
               </Grid>
             </Grid>
+            {mode == "competition" && (
+                <Grid size={{ xs: 12 }} textAlign={"center"} alignContent={"center"}>
+                  <Grid textAlign={"center"} alignContent={"center"}>
+                  <Typography sx={{ fontWeight: "bold" }}>Spielausgänge</Typography>
+                  <PieChart
+                    series={[{ data: outcomeData }]}
+                    colors={['#d4e157', 'blue', '#b71c1c']}
+                    width={500}
+                    height={200}
+                  />
+                  </Grid>
+                </Grid>
+              )}
           </>}
         </CardContent>
       </Card>
@@ -185,7 +226,7 @@ export default function Dashboard() {
             {renderGameModeStats('competition')}
           </>
         )}
-        {!gameStats && (<Grid><Typography> Noch keine Daten zur Anzeige. </Typography></Grid>)}
+        {!gameStats && (<Grid><Typography variant="h6" className='normHeadline' gutterBottom sx={{ my: 2, mx: 2 }}> Noch keine Daten zur Anzeige in diesem Kurs. </Typography></Grid>)}
       </Grid>
     </Grid>
   );
