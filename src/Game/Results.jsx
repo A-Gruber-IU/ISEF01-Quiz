@@ -118,6 +118,7 @@ export default function Results() {
     try {
       const courseStatsRef = doc(firestore, `users/${auth.currentUser.uid}/game_stats/`, activeCourse.id);
       const courseStatsSnap = await getDoc(courseStatsRef);
+      
       const gameStats = () => {
         let stats = {
           "game_id": gameId,
@@ -125,40 +126,46 @@ export default function Results() {
           "score": correctAnswers,
           "time": fullTime
         }
-        if (gameMode == "competition" && correctAnswers > correctAnswersOpponent) {
-          return ({ ...stats, "outcome": "winner", })
-        } else if (gameMode == "competition" && correctAnswers == correctAnswersOpponent) {
-          return ({ ...stats, "outcome": "draw", })
+        if (gameMode === "competition" && correctAnswers > correctAnswersOpponent) {
+          return { ...stats, "outcome": "won" }
+        } else if (gameMode === "competition" && correctAnswers === correctAnswersOpponent) {
+          return { ...stats, "outcome": "draw" }
+        } else if (gameMode === "competition" && correctAnswers < correctAnswersOpponent) {
+          return { ...stats, "outcome": "lost" }
         } else {
-          return stats
+          return { ...stats, "outcome": "-" }
         }
       }
+      
       const stats = gameStats();
       console.log("stats", stats)
       console.log("gameMode", gameMode)
-
-    if (courseStatsSnap.exists()) {
-      const gameModeMap = courseStatsSnap.data().gameMode || {};
-
-      // Update the document with the new data
-      await updateDoc(courseStatsRef, {
-        // Use the gameMode variable as the key
-        [gameMode]: { ...gameModeMap, [gameId]: stats } 
-      });
+  
+      if (courseStatsSnap.exists()) {
+        const existingData = courseStatsSnap.data();
+        const gameModeData = existingData[gameMode] || {};
+  
+        // Update the document by adding the new game stats to the existing data
+        await updateDoc(courseStatsRef, {
+          [gameMode]: { 
+            ...gameModeData, 
+            [gameId]: stats 
+          }
+        });
+      } else {
+        // Document doesn't exist, create it with the new data
+        await setDoc(courseStatsRef, {
+          [gameMode]: { [gameId]: stats }
+        });
+      }
+      
       console.log("Stats written successfully!");
       return true;
-    } else {
-      // Document doesn't exist, create it with the new data
-      await setDoc(courseStatsRef, {
-        // Use the gameMode variable as the key
-        [gameMode]: { [gameId]: stats } 
-      });
-      console.log("Stats written successfully!");
+    } catch (error) {
+      console.error("Error writing document: ", error);
+      return false;
     }
-  } catch (error) {
-    console.error("Error writing document: ", error);
   }
-};
   writeToStats();
 
   console.log("correctAnswers", correctAnswers);

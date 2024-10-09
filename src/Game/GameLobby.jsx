@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useBeforeUnload } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ref as databaseRef, onValue, get, remove, set } from 'firebase/database';
 import { deleteDoc, doc, getDoc } from 'firebase/firestore';
 import { Box, Typography, Button, Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
@@ -126,13 +126,6 @@ export default function GameLobby({ gameType, gameId }) {
     closeExitDialog();
     handleExit();
   }, [closeExitDialog, handleExit]);
-
-  useBeforeUnload(
-    useCallback((event) => {
-      event.preventDefault();
-      setIsExitDialogOpen(true);
-    }, [])
-  );
 
 
   if (loading) {

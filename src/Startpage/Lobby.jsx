@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { doc, getDoc, serverTimestamp as serverTimestampFS, setDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, serverTimestamp as serverTimestampFS, setDoc } from 'firebase/firestore';
 import { ref as databaseRef, onValue, set, push, get, remove, serverTimestamp as serverTimestampDB } from 'firebase/database';
 import { NavLink, useNavigate } from 'react-router-dom';
 
@@ -204,6 +204,27 @@ export default function Lobby() {
     }
   }
 
+  async function newSingleGame() {
+    try {
+      const gameDataRef = await addDoc(collection(firestore, "game_data"), {
+        player1: {
+          uid: activeUser.uid,
+          name: activeUser.displayName,
+        },
+        game_mode: "single",
+        start_time: serverTimestampFS()
+      });
+      let gameId = gameDataRef.id;
+      const userStatusRef = databaseRef(database, `lobbies/${activeCourse.id}/${activeUser.uid}`);
+      let newStatuses = { ...defaultStatuses, game_id: gameId };
+      await set(userStatusRef, newStatuses);
+      navigate(`/single/${gameId}`);
+      console.log("Starting single player game with ID: ", gameId);
+    } catch (error) {
+      console.error("Error initializing game.", error.message)
+    }
+  }
+
   if (loading) {
     return <CircularProgress />;
   }
@@ -212,21 +233,19 @@ export default function Lobby() {
     <>
       <Grid container marginBottom={3} spacing={2} size={{ xs: 12 }}>
         <Grid size={{ xs: 12, md: 6, lg: 3 }}>
-          <NavLink className="navlink" to={"single"}>
-            <Paper elevation={8} sx={{ py: 2, px: 2, textAlign: "center" }}>
-              <Box>
-                <Stack sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <IconButton aria-label="Singleplayer-Modus">
-                    <SportsEsportsIcon color='plainBlack' fontSize='large' />
-                  </IconButton>
-                  <Button color='plainBlack' variant='text'>
-                    Singleplayer-Modus
-                  </Button>
-                  <p className='smallDenseText'>Knack den Highscore!</p>
-                </Stack>
-              </Box>
-            </Paper>
-          </NavLink>
+          <Paper elevation={8} sx={{ py: 2, px: 2, textAlign: "center" }} onClick={newSingleGame}>
+            <Box>
+              <Stack sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <IconButton aria-label="Singleplayer-Modus" onClick={newSingleGame}>
+                  <SportsEsportsIcon color='plainBlack' fontSize='large' />
+                </IconButton>
+                <Button color='plainBlack' variant='text' onClick={newSingleGame}>
+                  Singleplayer-Modus
+                </Button>
+                <p className='smallDenseText'>Knack den Highscore!</p>
+              </Stack>
+            </Box>
+          </Paper>
         </Grid>
         <Grid size={{ xs: 12, md: 6, lg: 3 }}>
           <NavLink className="navlink" to={"dashboard"}>

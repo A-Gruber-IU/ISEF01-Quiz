@@ -39,16 +39,6 @@ export default function NavigationHandler() {
                 await deleteDoc(gameRef);
             }
         }
-        async function fetchGameIdFromStatus() {
-            try {
-                const statusSnap = await getDoc(userStatusRef);
-                const userStatusVal = statusSnap.val();
-                return userStatusVal["game_id"];
-            } catch (error) {
-                console.error("Error trying to delete game data for single game", error.message)
-            }
-        }
-
 
         async function resetLobbyStatus(privateLobbyId) {
             if (!privateLobbyId) return;
@@ -60,18 +50,18 @@ export default function NavigationHandler() {
             resetStatus();
         }
 
-        if (previousLocation.current.pathname.startsWith("/coop") && previousLocation.current.pathname != location.pathname) {
+        if (previousLocation.current.pathname.startsWith("/coop") && previousLocation.current.pathname != location.pathname && !location.pathname.startsWith("/result")) {
             const gameId = previousLocation.current.pathname.slice(6)
             resetLobbyStatus(gameId);
             deleteGameData(gameId);
         }
-        if (previousLocation.current.pathname.startsWith("/competition") && previousLocation.current.pathname != location.pathname) {
+        if (previousLocation.current.pathname.startsWith("/competition") && previousLocation.current.pathname != location.pathname && !location.pathname.startsWith("/result")) {
             const gameId = previousLocation.current.pathname.slice(12)
             resetLobbyStatus(gameId);
             deleteGameData(gameId);
         }
-        if (previousLocation.current.pathname.startsWith("/single") && previousLocation.current.pathname != location.pathname) {
-            const gameId = fetchGameIdFromStatus();
+        if (previousLocation.current.pathname.startsWith("/single") && previousLocation.current.pathname != location.pathname && !location.pathname.startsWith("/result")) {
+            const gameId = previousLocation.current.pathname.slice(7)
             deleteGameData(gameId);
         }
         if (previousLocation.current.pathname === "/" && location.pathname !== "/") {
@@ -133,7 +123,6 @@ export default function NavigationHandler() {
     // if (blocker.state === "blocked") return (
     //     <Dialog
     //         open={isExitDialogOpen}
-    //         onClose={closeExitDialog}
     //         aria-labelledby="alert-dialog-title"
     //         aria-describedby="alert-dialog-description"
     //     >
@@ -146,8 +135,8 @@ export default function NavigationHandler() {
     //             </DialogContentText>
     //         </DialogContent>
     //         <DialogActions>
-    //             <Button color='secondary' onClick={openExitDialog}>Abbrechen</Button>
-    //             <Button color='warning' onClick={confirmExit} autoFocus>
+    //             <Button color='secondary'>Abbrechen</Button>
+    //             <Button color='warning' autoFocus>
     //                 Verlassen
     //             </Button>
     //         </DialogActions>
