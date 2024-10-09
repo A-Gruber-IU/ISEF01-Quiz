@@ -19,7 +19,7 @@ export function useActiveCourse() {
         const userDocRef = doc(firestore, 'users', userId);
         const userDoc = await getDoc(userDocRef);
 
-        if (userDoc.exists() && userDoc.data().active_course) {
+        if (userDoc.exists() && userDoc.data().active_course && userDoc.data().active_course != '') {
           const activeCourseId = userDoc.data().active_course;
           const courseDocRef = doc(firestore, 'courses', activeCourseId);
           const courseDoc = await getDoc(courseDocRef);
@@ -38,6 +38,8 @@ export function useActiveCourse() {
           } else {
             console.error("Active course document does not exist");
           }
+        } else if (userDoc.exists() && (!userDoc.data().active_course || userDoc.data().active_course == '')) {
+          setActiveCourse({id: 0});
         }
       } catch (error) {
         console.error('Error:', error);

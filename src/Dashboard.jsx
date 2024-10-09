@@ -185,6 +185,7 @@ export default function Dashboard() {
             {renderGameModeStats('competition')}
           </>
         )}
+        {!gameStats && (<Grid><Typography> Noch keine Daten zur Anzeige. </Typography></Grid>)}
       </Grid>
     </Grid>
   );

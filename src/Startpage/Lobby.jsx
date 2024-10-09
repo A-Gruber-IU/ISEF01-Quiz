@@ -15,6 +15,7 @@ import QueryStatsIcon from '@mui/icons-material/QueryStats';
 import { useFirebase } from '../useFirebase';
 import { ActiveCourseDisplay } from './ActiveCourseDisplay';
 import { useActiveCourse } from '../User/useActiveCourse';
+import { CourseSelector } from './CourseSelector';
 
 export default function Lobby() {
   const { auth, database, firestore } = useFirebase();
@@ -225,8 +226,16 @@ export default function Lobby() {
     }
   }
 
-  if (loading) {
+  if (loading && (!activeCourse || activeCourse.id != 0)) {
     return <CircularProgress />;
+  }
+
+  if (loading && activeCourse.id == 0) {
+    return (
+      <Box alignContent={"center"}>
+    <CourseSelector handleChangeCourse={handleChangeCourse} activeCourse={activeCourse} />
+    </Box>
+  );
   }
 
   return (

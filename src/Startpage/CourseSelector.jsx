@@ -87,7 +87,7 @@ export function CourseSelector({ activeCourse, handleChangeCourse }) {
         color="primary"
         sx={{ marginTop: 2 }}
       >
-        Kurs ändern
+        Kurs wählen
       </Button>
       <Dialog
         open={open}
