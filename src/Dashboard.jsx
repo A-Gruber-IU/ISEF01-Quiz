@@ -89,7 +89,7 @@ export default function Dashboard() {
     return (
       <Card sx={{ marginBottom: 2 }}>
         <CardContent>
-          <Typography variant="h6" className='iuHeadline1' gutterBottom sx={{ my: 1 }}>{mode.toUpperCase()} MODE</Typography>
+          <Typography variant="h6" className='iuHeadline1' gutterBottom sx={{ my: 1 }}>{mode.toUpperCase()}-MODUS</Typography>
           {!chartData || chartData.length == 0 ? <Grid><Typography> Noch keine Daten zur Anzeige. </Typography></Grid> : <>
             <Grid container size={{ xs: 12 }}>
               <Grid container size={{ xs: 12 }}>
@@ -210,7 +210,7 @@ export default function Dashboard() {
   }
 
   return (
-    <Grid container spacing={2} marginTop={3}>
+    <Grid container spacing={2} marginTop={2} size={{ xs: 12 }}>
       <Grid size={{ xs: 12, sm: 4, md: 3, lg: 3 }}>
         <ActiveCourseDisplay
           activeCourse={activeCourse}
@@ -218,7 +218,7 @@ export default function Dashboard() {
           handleChangeCourse={handleChangeCourse}
         />
       </Grid>
-      <Grid size={{ xs: 12, sm: 8 }}>
+      <Grid size={{ xs: 12, sm: 8, md: 9, lg: 9  }}>
         {gameStats && (
           <>
             {renderGameModeStats('single')}
