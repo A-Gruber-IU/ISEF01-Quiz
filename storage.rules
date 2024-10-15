@@ -4,7 +4,7 @@ service firebase.storage {
   match /b/{bucket}/o {
     match /courses/{allPaths=**} {
       // TODO: Hier sollte man noch weitere Unterscheidungen treffen, aber Schreibberechtigung ist für getDownloadURL nötig
-      allow read, write: if request.auth != null; 
+      allow read: if request.auth != null; 
     }
   }
 }

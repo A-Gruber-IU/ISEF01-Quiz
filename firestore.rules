@@ -8,6 +8,7 @@ service cloud.firestore {
   }
 
     match /game_data/{gameId} {
+      // Users can read or write game data (e.g. choose questions and read the other player's answers) if they are a player in that game.
       allow read, write:  if request.auth != null 
                           && (request.auth.uid == resource.data.player1.uid 
                           || request.auth.uid == resource.data.player2.uid
@@ -17,23 +18,29 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
+      // Any logged-in user can read any other user's information
       allow read: if request.auth != null;
+      // Users can only edit their own personal information and only the fields for active course and their display name
       allow write:  if request.auth != null 
                     && request.auth.uid == userId
                     && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active_course', 'display_name']);
 
+      // Any logged-in user can read and write their own game stats, since there is not much point in manipulating them
       match /game_stats/{courseId} {
         allow read, write: if request.auth.uid == userId;
       }
     }
     
     match /courses/{courseId} {
+      // Courses' data can be read by any logged-in user, but there is currently no write option (later to be added for admins)
       allow read: if request.auth != null;
 
+      // Submitted questions are not indexed in the current version, but the need might arise if there are too many submitted questions that haven't been reviewed
       match /questions/index_submitted {
       allow read:   if request.auth != null;
       }
 
+      // Any logged in user can read the questions' index and any logged-in user can write to it, but only by adding a single question
       match /questions/index_reviewed {
         allow read:   if request.auth != null;
         allow write:  if request.auth != null 
@@ -42,15 +49,19 @@ service cloud.firestore {
       }
 
       match /questions/{questionId} {
+        // Questions cann be read by any logged-in user
         allow read:   if request.auth != null;
+        // Questions can be created by any logged-in user as long as the question data is complete and the user is identified correctly as author
         allow create: if request.auth.uid == request.resource.data.authorId
                       && request.resource.data.keys().hasAll(['authorId', 'reviewed', 'question_text', 'answer_a', 'answer_b', 'answer_c', 'answer_d', 'correct_answer', 'reviewerID'])
                       && request.resource.data.reviewed == false;
+        // Questions can be updated only to reflect the review status and the reviewer can't be the author
         allow update: if request.auth != null 
                       && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reviewed', 'reviewerID'])
                       && request.resource.data.diff(resource.data).affectedKeys().hasAll(['reviewed', 'reviewerID'])
                       && request.auth.uid != request.resource.data.authorId
                       && request.auth.uid == request.resource.data.reviewerID;
+        // Questions can only be deleted if they haven't been reviewed successfully
         allow delete: if request.auth != null
                       && resource.data.reviewed == false;
                       // && get(/databases/$(database)/documents/courses/$(courseId)/questions/$(questionId)).data.reviewed == false;
@@ -58,12 +69,12 @@ service cloud.firestore {
       }
     }
     
-    
-    
+    // Chat information for public lobbies can be read by any logged-in user
     match /lobby_chats/{courseId} {
       allow read: if request.auth != null;
       
-      // TODO Content validation, i.e. number of characters
+      // Chat messages in public lobbies can be read by any logged-in user as long as the message data is complete and the user is identified correctly as author
+      // TODO further Content validation, i.e. number of characters
       match /messages/{messageId} {
         allow read:   if request.auth != null;
         allow create: if request.auth != null
@@ -72,10 +83,13 @@ service cloud.firestore {
       }
     }
 
+    // Chats in private lobbies can only be read by lobby members
     match /private_chats/{chatId} {
       allow read, create: if request.auth != null;
       allow write: if request.auth != null && isParticipantInPrivateChat(chatId);
       
+      // Messages in private chat can only be read by members and written by members as long as the message data is complete and the user is identified correctly as author
+      // TODO further Content validation, i.e. number of characters
       match /messages/{messageId} {
         allow read:   if request.auth != null && isParticipantInPrivateChat(chatId);
         allow create: if request.auth != null 
