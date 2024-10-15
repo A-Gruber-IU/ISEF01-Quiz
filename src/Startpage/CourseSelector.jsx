@@ -52,16 +52,16 @@ export function CourseSelector({ activeCourse, handleChangeCourse }) {
             return {
               id: courseDoc.id,
               ...data,
-              imageUrl,
+              imageUrl: imageUrl,
             };
           }
         });
         const resolvedCourses = await Promise.all(coursePromises);
         setCoursesData(resolvedCourses.filter((course) => course !== null)); // Filter out null values
+        setLoading(false);
       } catch (error) {
         console.error("Error:", error);
       }
-      setLoading(false);
     }
     fetchCoursesData();
   }, [firestore, storage, userCourses]);
