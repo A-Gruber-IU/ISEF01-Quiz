@@ -19,7 +19,7 @@ export function ActiveCourseDisplay({ activeCourse, loading, handleChangeCourse 
     );
   }
 
-  else if (activeCourse && activeCourse.imageUrl && activeCourse.long_name && activeCourse.short_name) {
+  else if (activeCourse) {
     return (
       <Card>
         <CardMedia

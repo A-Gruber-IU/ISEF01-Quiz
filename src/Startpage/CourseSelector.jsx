@@ -52,7 +52,7 @@ export function CourseSelector({ activeCourse, handleChangeCourse }) {
             return {
               id: courseDoc.id,
               ...data,
-              imageUrl: imageUrl || "",
+              imageUrl: imageUrl,
             };
           }
         });
