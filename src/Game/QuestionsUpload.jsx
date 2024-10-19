@@ -2,8 +2,12 @@ import { addDoc, collection, doc, getDocs, setDoc } from 'firebase/firestore';
 import { Button } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { styled } from '@mui/material/styles';
+import { useFirebase } from '../useFirebase';
   
+// This is a admin helper function to upload questions as batch in JSON format
 export default function QuestionsUpload() {
+
+  const { firestore } = useFirebase();
 
     const VisuallyHiddenInput = styled('input')({
         clip: 'rect(0 0 0 0)',
