@@ -1,10 +1,9 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CourseSelector } from '../src/Startpage/CourseSelector';
 import { useFirebase } from '../src/useFirebase';
 import { getDoc } from 'firebase/firestore';
-import { getDownloadURL } from 'firebase/storage';
 
 // Mock the custom hooks and Firebase functions
 vi.mock('../src/useFirebase', () => ({
