@@ -1,5 +1,5 @@
 import { Outlet, useNavigation } from 'react-router-dom';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Container } from '@mui/material';
 import BottomNav from './Layout/BottomNav';
 import TopNav from './Layout/TopNav';
@@ -9,7 +9,7 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 import { connectAuthEmulator, signOut } from "firebase/auth";
 import { connectFirestoreEmulator, getDoc, doc } from "firebase/firestore";
-import { connectDatabaseEmulator, ref as databaseRef, remove, onDisconnect, get, onValue, set } from "firebase/database";
+import { connectDatabaseEmulator, ref as databaseRef, remove, onDisconnect, onValue } from "firebase/database";
 import { connectStorageEmulator } from 'firebase/storage';
 
 import { useFirebase } from './useFirebase';
