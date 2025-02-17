@@ -5,9 +5,8 @@ Das ist ein Projekt von Studierenden der IU Internationale Hochschule zur Entwic
 Link zur App-Demo:
 [https://iu-quizapp.web.app/](https://iu-quizapp.web.app/)
 
-[![Video ansehen](https://img.youtube.com/vi/PAoBUf8xP0k/maxresdefault.jpg)](https://youtu.be/PAoBUf8xP0k)
-
-### [Auf YouTube ansehen](https://youtu.be/PAoBUf8xP0k)
+Link zum Präsentations-Video:
+[https://www.youtube.com/watch?v=PAoBUf8xP0k](https://www.youtube.com/watch?v=PAoBUf8xP0k)
 
 Entwurf Datenstruktur:
 
